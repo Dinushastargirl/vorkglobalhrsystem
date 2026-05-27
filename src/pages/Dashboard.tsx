@@ -1,0 +1,1076 @@
+import React, { useState, useEffect } from 'react';
+import { 
+  Calendar as CalendarIcon, Clock, CheckCircle2, XCircle, Plus, 
+  ArrowUpRight, ArrowDownRight, Timer, ListTodo,
+  TrendingUp, Briefcase, UserCheck, ShieldCheck, Trash2, Camera,
+  ChevronLeft, ChevronRight, AlertCircle
+} from 'lucide-react';
+import { LeaveRequest, AttendanceRecord, Task, LeaveType, UserProfile } from '../types';
+import { cn, formatDate } from '../lib/utils';
+import * as userService from '../services/userService';
+import * as attendanceService from '../services/attendanceService';
+import * as leaveService from '../services/leaveService';
+import * as taskService from '../services/taskService';
+import * as payrollService from '../services/payrollService';
+import * as performanceService from '../services/performanceService';
+import { motion, AnimatePresence } from 'motion/react';
+import { 
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, 
+  Tooltip, ResponsiveContainer, Cell, PieChart, Pie 
+} from 'recharts';
+
+import { useAuth } from '../hooks/useAuth';
+import { toast } from 'sonner';
+import Logo from '../components/Logo';
+
+export default function Dashboard() {
+  const { user, uid } = useAuth();
+  const [requests, setRequests] = useState<LeaveRequest[]>([]);
+  const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [employees, setEmployees] = useState<UserProfile[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [selectedTaskUserId, setSelectedTaskUserId] = useState<string | null>(null);
+  
+  // Form state
+  const [leaveType, setLeaveType] = useState<LeaveType>('Annual');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [startTime, setStartTime] = useState('09:00');
+  const [endTime, setEndTime] = useState('11:00');
+  const [reason, setReason] = useState('');
+  const [leaveImage, setLeaveImage] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [showQuotaWarning, setShowQuotaWarning] = useState(false);
+  const [pendingSubmitData, setPendingSubmitData] = useState<any>(null);
+
+  const [calendarDate, setCalendarDate] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const getGreeting = () => {
+    const hour = currentTime.getHours();
+    if (hour < 12) return { text: 'Good Morning', icon: '🌞' };
+    if (hour < 18) return { text: 'Good Afternoon', icon: '☀️' };
+    return { text: 'Good Evening', icon: '🌙' };
+  };
+
+  const formatBalance = (totalDays: number) => {
+    const d = Math.floor(totalDays);
+    const h = Number(((totalDays - d) * 8).toFixed(1));
+    const parts = [];
+    if (d > 0) parts.push(`${d} Day${d !== 1 ? 's' : ''}`);
+    if (h > 0) parts.push(`${h} Hour${h !== 1 ? 's' : ''}`);
+    return parts.length > 0 ? parts.join(' and ') : '0 Days';
+  };
+
+  const loadData = async () => {
+    if (!uid || !user) return;
+    setLoading(true);
+    try {
+      const isManagement = user.role === 'hr' || user.role === 'owner' || user.role === 'super';
+      
+      const [empData, leaveData, attendanceData, taskData] = await Promise.all([
+        userService.getEmployees(),
+        leaveService.getLeaves(isManagement ? undefined : uid),
+        attendanceService.getAttendance(isManagement ? undefined : uid),
+        taskService.getTasks(selectedTaskUserId || uid!)
+      ]);
+
+      setEmployees(empData);
+      setRequests(leaveData);
+      setAttendance(attendanceData);
+      setTasks(taskData);
+    } catch (err) {
+      console.error('Error loading dashboard data:', err);
+      toast.error('Failed to sync data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (uid && !selectedTaskUserId) {
+      setSelectedTaskUserId(uid);
+    }
+  }, [uid]);
+
+  useEffect(() => {
+    loadData();
+  }, [uid, user?.role, selectedTaskUserId]);
+
+  // Live Performance Calculation logic (mirrors Performance page)
+  const getLiveMetrics = (targetUid: string) => {
+    const empAttendance = attendance.filter(a => a.userId === targetUid);
+    const empTasks = tasks.filter(t => t.userId === targetUid);
+    
+    const totalLogs = empAttendance.length;
+    const lateLogs = empAttendance.filter(a => a.isLate).length;
+    const punctuality = totalLogs > 0 ? Math.round(((totalLogs - lateLogs) / totalLogs) * 100) : 100;
+
+    const finishedTasks = empTasks.filter(t => t.completed).length;
+    const efficiency = empTasks.length > 0 ? Math.round((finishedTasks / empTasks.length) * 100) : 0;
+
+    const reliability = totalLogs > 0 ? Math.round((empAttendance.filter(a => a.checkOut).length / totalLogs) * 100) : 100;
+    
+    return Math.round((punctuality + efficiency + reliability) / 3) || 85;
+  };
+
+  const currentPerformance = user ? getLiveMetrics(user.uid) : 85;
+
+  const getLocalToday = () => {
+    return new Intl.DateTimeFormat('en-CA', { 
+      timeZone: 'Asia/Colombo', 
+      year: 'numeric', month: '2-digit', day: '2-digit' 
+    }).format(currentTime);
+  };
+
+  const todayStr = getLocalToday();
+  const todayRecord = attendance.find(r => r.date === todayStr);
+  const isCheckedIn = !!todayRecord;
+  const isCheckedOut = !!todayRecord?.checkOut;
+
+  const handleCheckIn = async () => {
+    if (!uid) return;
+    try {
+      await attendanceService.checkIn(uid);
+      toast.success('Checked in successfully!');
+      loadData();
+    } catch (err) {
+      toast.error('Failed to check in or already checked in today');
+    }
+  };
+
+  const handleCheckOut = async () => {
+    if (!uid) return;
+    try {
+      await attendanceService.checkOut(uid);
+      toast.success('Checked out successfully!');
+      loadData();
+    } catch (err) {
+      toast.error('Failed to check out');
+    }
+  };
+
+  const toggleTask = async (id: string, completed: boolean) => {
+    await taskService.toggleTask(id, !completed);
+    loadData();
+  };
+
+  const deleteTask = async (id: string) => {
+    await taskService.deleteTask(id);
+    loadData();
+  };
+
+  const addTask = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const form = e.currentTarget;
+    const title = (form.elements.namedItem('taskTitle') as HTMLInputElement).value;
+    const targetId = selectedTaskUserId || uid;
+    if (!title || !targetId) return;
+
+    await taskService.addTask(targetId, title);
+    form.reset();
+    toast.success('Task added');
+    loadData();
+  };
+
+  const handleSubmitLeave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!uid || !user) return;
+    
+    // Consolidated Quota validation (14 days total)
+    const totalQuota = Number(user.leaveQuotas?.annual) || 14;
+    const totalUsed = (Object.values(user.usedLeaves || {}) as number[]).reduce((a: number, b: any) => a + (Number(b) || 0), 0);
+    let remaining = totalQuota - totalUsed;
+    
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    let diffDays = 0;
+    
+    if (leaveType === 'Short') {
+      const [h1, m1] = startTime.split(':').map(Number);
+      const [h2, m2] = endTime.split(':').map(Number);
+      const totalMinutes = (h2 * 60 + m2) - (h1 * 60 + m1);
+      diffDays = Math.max(0, totalMinutes / 60) / 8;
+    } else {
+      diffDays = Math.ceil(Math.abs(end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+    }
+
+    const today = new Date();
+    const maxDate = new Date();
+    maxDate.setMonth(maxDate.getMonth() + 2);
+
+    if (start > maxDate) {
+      toast.error(`You can only apply for leaves up to 2 months in advance (Before ${maxDate.toLocaleDateString()}).`);
+      return;
+    }
+
+    if (diffDays > remaining) {
+      toast.error(`Insufficient leave balance. Remaining: ${remaining} days.`);
+      return;
+    }
+
+    setSubmitting(true);
+    let isQuotaExceeded = false;
+    const [startYear, startMonth] = startDate.split('-').map(Number);
+    const monthlyTotal = await leaveService.getMonthlyLeaveTotal(uid, startMonth - 1, startYear);
+    if (monthlyTotal + diffDays > 1.5) {
+      setPendingSubmitData({ diffDays, leaveType, reason, startDate, endDate, startTime, endTime, isQuotaExceeded: true });
+      setShowQuotaWarning(true);
+      setSubmitting(false);
+      return;
+    }
+    await proceedSubmit({ diffDays, leaveType, reason, startDate, endDate, startTime, endTime, isQuotaExceeded: false });
+  };
+
+  const proceedSubmit = async (data: any) => {
+    setSubmitting(true);
+    try {
+      const leaveData: any = {
+        userId: uid,
+        userName: user!.name,
+        userRole: user!.role,
+        leaveType: data.leaveType,
+        reason: data.reason,
+        startDate: data.startDate,
+        endDate: data.leaveType === 'Short' ? data.startDate : data.endDate,
+        startTime: data.leaveType === 'Short' ? data.startTime : null,
+        endTime: data.leaveType === 'Short' ? data.endTime : null,
+        status: 'Pending',
+        isQuotaExceeded: data.isQuotaExceeded,
+        createdAt: new Date().toISOString(),
+        imageUrl: leaveImage || null
+      };
+      
+      await leaveService.submitLeave(leaveData);
+      
+      toast.success('Leave request submitted successfully!');
+      setIsModalOpen(false);
+      setReason('');
+      setStartDate('');
+      setEndDate('');
+      setStartTime('09:00');
+      setEndTime('11:00');
+      setLeaveImage(null);
+      loadData();
+    } catch (error: any) {
+      console.error('Leave submission error:', error);
+      toast.error(error.message || 'Failed to submit leave request. Please check your data.');
+    } finally {
+      setSubmitting(false);
+      setShowQuotaWarning(false);
+      setPendingSubmitData(null);
+    }
+  };
+
+  const handleAction = async (id: string, status: 'Approved' | 'Rejected') => {
+    if (!user) return;
+    try {
+      await leaveService.updateLeaveStatus(id, status, user.uid);
+      toast.success(`Leave request ${status.toLowerCase()}`);
+      loadData();
+    } catch (err) {
+      toast.error('Failed to update request');
+    }
+  };
+
+  const canApprove = (req: LeaveRequest) => {
+    if (!user) return false;
+    const myRole = user.role;
+    const theirRole = req.userRole;
+
+    // Management (Owner, HR, Super) can approve Employees
+    if ((myRole === 'owner' || myRole === 'hr' || myRole === 'super') && theirRole === 'employee') return true;
+    
+    // Owners can approve HR and Super as well
+    if (myRole === 'owner' && (theirRole === 'hr' || theirRole === 'super')) return true;
+
+    return false;
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setLeaveImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const renderCalendar = () => {
+    const year = calendarDate.getFullYear();
+    const month = calendarDate.getMonth();
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const today = new Date();
+    
+    const days = [];
+    for (let i = 0; i < firstDay; i++) days.push(null);
+    for (let i = 1; i <= daysInMonth; i++) days.push(i);
+
+    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+    return (
+      <div className="bg-white p-6 rounded-4xl border border-zinc-100 shadow-sm">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="font-bold text-zinc-900 flex items-center gap-2">
+            <CalendarIcon size={18} className="text-orange-500" />
+            {monthNames[month]} {year}
+          </h3>
+          <div className="flex gap-1">
+            <button 
+              onClick={() => setCalendarDate(new Date(year, month - 1))}
+              className="p-1.5 hover:bg-zinc-50 rounded-lg text-zinc-400 hover:text-zinc-600 transition-all"
+            >
+              <ChevronLeft size={16} />
+            </button>
+            <button 
+              onClick={() => setCalendarDate(new Date(year, month + 1))}
+              className="p-1.5 hover:bg-zinc-50 rounded-lg text-zinc-400 hover:text-zinc-600 transition-all"
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
+        </div>
+        <div className="grid grid-cols-7 gap-1 text-center mb-2">
+          {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(d => (
+            <span key={d} className="text-[10px] font-bold text-zinc-400 uppercase">{d}</span>
+          ))}
+        </div>
+        <div className="grid grid-cols-7 gap-1">
+          {days.map((day, i) => (
+            <div 
+              key={i} 
+              className={cn(
+                "aspect-square flex items-center justify-center text-xs font-bold rounded-xl transition-all",
+                !day ? "invisible" : "hover:bg-orange-50 cursor-default",
+                day === today.getDate() && month === today.getMonth() && year === today.getFullYear() 
+                  ? "bg-orange-500 text-white shadow-lg shadow-orange-200" 
+                  : "text-zinc-600"
+              )}
+            >
+              {day}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  const getManagementStats = () => {
+    const todayStr = getLocalToday();
+    const activeNow = attendance.filter(a => a.date === todayStr && !a.checkOut).length;
+    const pendingRequests = requests.filter(r => r.status === 'Pending').length;
+    
+    // Average company performance
+    const allScores = employees.map(e => getLiveMetrics(e.uid));
+    const avgScore = allScores.length > 0 ? Math.round(allScores.reduce((a: number, b: number) => a + b, 0) / allScores.length) : 85;
+
+    return { totalStaff: employees.length, activeNow, pendingRequests, avgScore };
+  };
+
+  const mStats = getManagementStats();
+
+  const attendanceData = [
+    { day: 'Mon', hours: 0 },
+    { day: 'Tue', hours: 0 },
+    { day: 'Wed', hours: 0 },
+    { day: 'Thu', hours: 0 },
+    { day: 'Fri', hours: 0 },
+  ];
+
+  // Map real attendance to the weekly chart
+  attendance.slice(0, 30).forEach(r => {
+    const date = new Date(r.date);
+    const dayName = date.toLocaleDateString([], { weekday: 'short' });
+    const match = attendanceData.find(d => d.day === dayName);
+    if (match && r.checkIn && r.checkOut) {
+      const diff = new Date(r.checkOut).getTime() - new Date(r.checkIn).getTime();
+      match.hours = Math.max(match.hours, Math.round((diff / (1000 * 60 * 60)) * 10) / 10);
+    }
+  });
+
+  if (loading) return <div className="p-8 text-center text-zinc-400 font-bold">Syncing HR Pulse...</div>;
+
+  const greeting = getGreeting();
+  const isAdmin = user?.role === 'owner' || user?.role === 'super' || user?.role === 'hr';
+
+  return (
+    <div className="space-y-8 pb-12">
+      {/* 🚀 Role-Aware Header Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        <div className="lg:col-span-2 space-y-6">
+          <div className="bg-linear-to-br from-zinc-900 to-zinc-800 rounded-4xl p-8 text-white shadow-xl relative overflow-hidden">
+            <div className="relative z-10">
+              <div className="flex items-center gap-3 mb-6">
+                <span className="text-4xl">{greeting.icon}</span>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h1 className="text-3xl font-black">{greeting.text}, {user?.name.split(' ')[0]}!</h1>
+                      <p className="text-zinc-400 font-bold uppercase tracking-wider text-xs">
+                        {isAdmin ? `${user?.role.toUpperCase()} • Company Access Active` : `${user?.role.toUpperCase()} • Personal Workspace`}
+                      </p>
+                    </div>
+                    <div className="text-right hidden md:block border-l border-white/10 pl-6">
+                      <p className="text-5xl font-black tracking-tighter tabular-nums">{currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                      <p className="text-[10px] font-black text-orange-400 uppercase tracking-widest">{currentTime.toLocaleDateString([], { weekday: 'long' })}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                {isAdmin ? (
+                  <>
+                    <div className="bg-white/5 backdrop-blur-md p-4 rounded-2xl border border-white/10">
+                      <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">Total Staff</p>
+                      <p className="text-2xl font-black">{mStats.totalStaff}</p>
+                    </div>
+                    <div className="bg-white/5 backdrop-blur-md p-4 rounded-2xl border border-white/10">
+                      <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">Active Now</p>
+                      <p className="text-2xl font-black text-green-400">{mStats.activeNow}</p>
+                    </div>
+                    <div className="bg-white/5 backdrop-blur-md p-4 rounded-2xl border border-white/10">
+                      <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">Pending Requests</p>
+                      <p className="text-2xl font-black text-orange-400">{mStats.pendingRequests}</p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="bg-white/5 backdrop-blur-md p-4 rounded-2xl border border-white/10">
+                    <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">Performance</p>
+                    <p className="text-2xl font-black text-orange-400">{currentPerformance}%</p>
+                  </div>
+                  <div className="bg-white/5 backdrop-blur-md p-4 rounded-2xl border border-white/10">
+                    <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">Net Pay</p>
+                    <p className="text-2xl font-black">LKR {user?.net.toLocaleString()}</p>
+                  </div>
+                  <div className="bg-white/5 backdrop-blur-md p-4 rounded-2xl border border-white/10">
+                    <p className="text-2xl font-black text-blue-400">
+                      {(() => {
+                        const totalUsed = (Object.values(user?.usedLeaves || {}) as number[]).reduce((a: number, b: any) => a + (Number(b) || 0), 0);
+                        const annual = Number(user?.leaveQuotas?.annual) || 14;
+                        const remaining = annual - totalUsed;
+                        const days = Math.floor(remaining);
+                        const hours = Number(((remaining - days) * 8).toFixed(1));
+                        return `${days}d ${hours}h`;
+                      })()}
+                    </p>
+                  </div>
+                  </>
+                )}
+              </div>
+
+              <div className="flex flex-wrap gap-4">
+                {(user?.role === 'employee' || user?.role === 'hr') ? (
+                  <>
+                    {!(attendance.find(r => r.date === getLocalToday())) ? (
+                      <button 
+                        onClick={handleCheckIn}
+                        className="bg-orange-500 text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 hover:bg-orange-600 transition-all shadow-lg shadow-orange-900/20"
+                      >
+                        <ArrowUpRight size={20} />
+                        Check In Now
+                      </button>
+                    ) : !(attendance.find(r => r.date === getLocalToday() && r.checkOut)) ? (
+                      <button 
+                        onClick={handleCheckOut}
+                        className="bg-white text-zinc-900 px-6 py-3 rounded-2xl font-bold flex items-center gap-2 hover:bg-zinc-100 transition-all shadow-lg"
+                      >
+                        <ArrowDownRight size={20} />
+                        Check Out
+                      </button>
+                    ) : (
+                      <div className="bg-green-500/20 text-green-400 border border-green-500/30 px-6 py-3 rounded-2xl font-bold flex items-center gap-2">
+                        <CheckCircle2 size={20} />
+                        Shift Logged
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="flex gap-4">
+                    <div className="bg-orange-500 text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 shadow-lg shadow-orange-900/20">
+                      <ShieldCheck size={20} />
+                      Management Mode
+                    </div>
+                    {(user?.role === 'owner' || user?.role === 'super') && (
+                      <div className="bg-white/10 border border-white/10 px-6 py-3 rounded-2xl font-bold flex items-center gap-2">
+                        <TrendingUp size={20} className="text-green-400" />
+                        Avg Performance: {mStats.avgScore}%
+                      </div>
+                    )}
+                  </div>
+                )}
+                <button 
+                  onClick={() => setIsModalOpen(true)}
+                  className="bg-white/10 border border-white/20 text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 hover:bg-white/20 transition-all"
+                >
+                  <Plus size={20} />
+                  New Request
+                </button>
+              </div>
+            </div>
+            <div className="absolute top-[-20%] right-[-10%] w-64 h-64 bg-orange-500/10 rounded-full blur-3xl"></div>
+          </div>
+
+          {/* Analytics Row */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-white p-6 rounded-4xl border border-zinc-100 shadow-sm">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="font-bold text-zinc-900 flex items-center gap-2 text-sm uppercase tracking-widest">
+                  <TrendingUp size={16} className="text-orange-500" />
+                  {isAdmin ? 'Company Resources' : 'My Leave Status'}
+                </h3>
+              </div>
+              <div className="h-48 relative">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={user ? [
+                        { 
+                          name: 'Remaining', 
+                          value: Math.max(0, (Number(user.leaveQuotas?.annual) || 14) - (Object.values(user.usedLeaves || {}) as number[]).reduce((a: number, b: any) => a + (Number(b) || 0), 0)), 
+                          color: '#d4af37' 
+                        },
+                        { 
+                          name: 'Used', 
+                          value: Object.values(user.usedLeaves || {}).reduce((a: number, b: any) => a + (Number(b) || 0), 0), 
+                          color: '#29292e' 
+                        },
+                      ] : []}
+                      innerRadius={60}
+                      outerRadius={80}
+                      paddingAngle={5}
+                      dataKey="value"
+                      stroke="none"
+                    >
+                      {user && [
+                        { color: '#d4af37' },
+                        { color: '#29292e' }
+                      ].map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      contentStyle={{ borderRadius: '12px', border: 'none', backgroundColor: '#111113', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
+                      itemStyle={{ fontWeight: 'bold', fontSize: '12px', color: '#ffffff' }}
+                    />
+                  </PieChart>
+                  {/* Central Balance Label */}
+                  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                    <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Balance</p>
+                    <p className="text-2xl font-black text-zinc-900">
+                      {(() => {
+                        const totalUsed = (Object.values(user?.usedLeaves || {}) as number[]).reduce((a: number, b: any) => a + (Number(b) || 0), 0);
+                        const annual = Number(user?.leaveQuotas?.annual) || 14;
+                        return Math.floor(annual - totalUsed);
+                      })()}
+                    </p>
+                    <p className="text-[10px] font-bold text-zinc-400">
+                      {(() => {
+                        const totalUsed = (Object.values(user?.usedLeaves || {}) as number[]).reduce((a: number, b: any) => a + (Number(b) || 0), 0);
+                        const annual = Number(user?.leaveQuotas.annual) || 14;
+                        const remaining = annual - totalUsed;
+                        const hours = Number(((remaining - Math.floor(remaining)) * 8).toFixed(1));
+                        return `Days & ${hours}h`;
+                      })()}
+                    </p>
+                  </div>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-4xl border border-zinc-100 shadow-sm">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="font-bold text-zinc-900 flex items-center gap-2 text-sm uppercase tracking-widest">
+                  <Timer size={16} className="text-orange-500" />
+                  {isAdmin ? 'System Load' : 'Weekly Activity'}
+                </h3>
+              </div>
+              <div className="h-48">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={attendanceData}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#1b1b1e" />
+                    <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#a1a1aa' }} />
+                    <YAxis hide />
+                    <Tooltip cursor={{ fill: '#1a1710' }} contentStyle={{ borderRadius: '12px', border: 'none', backgroundColor: '#111113', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }} />
+                    <Bar dataKey="hours" fill="#d4af37" radius={[6, 6, 0, 0]} barSize={24} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          {/* Quick Peek */}
+          <div className="bg-zinc-900 p-6 rounded-4xl text-white shadow-xl shadow-zinc-200">
+            <h3 className="font-bold text-sm uppercase tracking-widest text-zinc-500 mb-6 flex items-center gap-2">
+              <ShieldCheck size={16} className="text-orange-500" />
+              Company Health
+            </h3>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-zinc-400 text-sm">Attendance</span>
+                <span className={cn(
+                  "font-black",
+                  mStats.activeNow / (mStats.totalStaff || 1) > 0.8 ? "text-green-400" : "text-orange-400"
+                )}>
+                  {Math.round((mStats.activeNow / (mStats.totalStaff || 1)) * 100)}% Active
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-zinc-400 text-sm">Leave Volume</span>
+                <span className={cn(
+                  "font-black",
+                  mStats.pendingRequests > 5 ? "text-red-400" : mStats.pendingRequests > 2 ? "text-orange-400" : "text-green-400"
+                )}>
+                  {mStats.pendingRequests > 5 ? 'High Load' : mStats.pendingRequests > 2 ? 'Moderate' : 'Normal'}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-zinc-400 text-sm">Performance</span>
+                <span className="font-black text-white">{isAdmin ? `${mStats.avgScore}% avg` : `${currentPerformance}%`}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Tasks Section */}
+          <div className="bg-white p-6 rounded-4xl border border-zinc-100 shadow-sm flex flex-col">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="font-bold text-zinc-900 flex items-center gap-2">
+                <ListTodo size={18} className="text-orange-500" />
+                Daily Tasks
+              </h3>
+              {isAdmin && (
+                <select 
+                  value={selectedTaskUserId || ''} 
+                  onChange={(e) => setSelectedTaskUserId(e.target.value)}
+                  className="text-[10px] uppercase tracking-widest font-black bg-zinc-50 border border-zinc-100 rounded-lg px-3 py-1.5 outline-none focus:ring-2 focus:ring-orange-500 transition-all cursor-pointer"
+                >
+                  <option value={uid!}>My Workspace</option>
+                  <optgroup label="Employees">
+                    {employees.filter(e => e.uid !== uid).map(emp => (
+                      <option key={emp.uid} value={emp.uid}>{emp.name}</option>
+                    ))}
+                  </optgroup>
+                </select>
+              )}
+            </div>
+            <form onSubmit={addTask} className="mb-6">
+              <div className="relative">
+                <input 
+                  name="taskTitle"
+                  type="text" 
+                  placeholder="Add a new task..." 
+                  className="w-full pl-4 pr-12 py-3 bg-zinc-50 border border-zinc-100 rounded-2xl text-sm focus:ring-2 focus:ring-orange-500 outline-none transition-all"
+                />
+                <button type="submit" className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-zinc-900 text-white rounded-xl hover:bg-zinc-800 transition-all">
+                  <Plus size={16} />
+                </button>
+              </div>
+            </form>
+            <div className="flex-1 space-y-3 overflow-y-auto max-h-[300px]">
+              {tasks.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-sm text-zinc-400 font-medium">No tasks for today</p>
+                </div>
+              ) : (
+                tasks.map(task => (
+                  <div 
+                    key={task.id} 
+                    className={cn(
+                      "group flex items-center gap-3 p-4 rounded-2xl border transition-all",
+                      task.completed ? "bg-zinc-50 border-zinc-100 opacity-60" : "bg-white border-zinc-100 hover:border-orange-200"
+                    )}
+                  >
+                    <div 
+                      onClick={() => toggleTask(task.id!, task.completed)}
+                      className={cn(
+                        "w-5 h-5 rounded-md border flex items-center justify-center transition-all cursor-pointer shadow-sm",
+                        task.completed ? "bg-green-500 border-green-500 text-white" : "border-zinc-300 group-hover:border-orange-400 bg-white"
+                      )}
+                    >
+                      {task.completed && <CheckCircle2 size={12} />}
+                    </div>
+                    <span 
+                      onClick={() => toggleTask(task.id!, task.completed)}
+                      className={cn("flex-1 text-sm font-medium cursor-pointer", task.completed ? "line-through text-zinc-400" : "text-zinc-700")}
+                    >
+                      {task.title}
+                    </span>
+                    <button 
+                      onClick={() => deleteTask(task.id!)}
+                      className="p-1.5 text-zinc-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Calendar Widget */}
+          {renderCalendar()}
+        </div>
+      </div>
+
+      {/* Leave History Table */}
+      <div className="bg-white rounded-4xl border border-zinc-100 shadow-sm overflow-hidden">
+        <div className="p-8 border-b border-zinc-50 flex items-center justify-between">
+          <h2 className="text-xl font-black text-zinc-900">Recent Leave Requests</h2>
+          <button className="text-sm font-bold text-orange-500 hover:text-orange-600 transition-colors">View All</button>
+        </div>
+
+        {/* Desktop View: Wide Table Layout */}
+        <div className="hidden md:block overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-zinc-50/50">
+                <th className="px-8 py-4 text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Type</th>
+                <th className="px-8 py-4 text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Duration</th>
+                <th className="px-8 py-4 text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Reason</th>
+                <th className="px-8 py-4 text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Status</th>
+                {isAdmin && <th className="px-8 py-4 text-[10px] font-bold text-zinc-400 uppercase tracking-widest text-right">Actions</th>}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-zinc-50">
+              {requests.length === 0 ? (
+                <tr>
+                  <td colSpan={isAdmin ? 5 : 4} className="px-8 py-10 text-center text-zinc-400 font-medium">No leave requests found</td>
+                </tr>
+              ) : (
+                requests.slice(0, 5).map((request) => (
+                  <tr key={request.id} className={cn("transition-colors", request.isQuotaExceeded ? "bg-red-50 hover:bg-red-100" : "hover:bg-zinc-50/30")}>
+                    <td className="px-8 py-5">
+                      <div className="flex items-center gap-3">
+                        <Logo size="sm" />
+                        <div>
+                          <p className="font-bold text-zinc-900">{request.leaveType}</p>
+                          {isAdmin && <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">{request.userName}</p>}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-8 py-5">
+                      <p className="text-sm font-bold text-zinc-700">
+                        {formatDate(request.startDate)}
+                        {request.startTime && ` • ${request.startTime} - ${request.endTime}`}
+                      </p>
+                      {request.startDate !== request.endDate && (
+                        <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">To {formatDate(request.endDate)}</p>
+                      )}
+                    </td>
+                    <td className="px-8 py-5">
+                      <p className="text-sm text-zinc-500 max-w-xs truncate font-medium">{request.reason}</p>
+                    </td>
+                    <td className="px-8 py-5">
+                      <div className={cn(
+                        "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border",
+                        request.status === 'Approved' ? "bg-green-50 text-green-700 border-green-100" :
+                        request.status === 'Rejected' ? "bg-red-50 text-red-700 border-red-100" :
+                        "bg-amber-50 text-amber-700 border-amber-100"
+                      )}>
+                        {request.status}
+                      </div>
+                    </td>
+                    {isAdmin && (
+                      <td className="px-8 py-5 text-right">
+                        {request.status === 'Pending' && canApprove(request) ? (
+                          <div className="inline-flex gap-2">
+                            <button 
+                              onClick={() => handleAction(request.id!, 'Approved')}
+                              className="p-1.5 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-all shadow-sm"
+                              title="Approve"
+                            >
+                              <CheckCircle2 size={16} />
+                            </button>
+                            <button 
+                              onClick={() => handleAction(request.id!, 'Rejected')}
+                              className="p-1.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all shadow-sm"
+                              title="Reject"
+                            >
+                              <XCircle size={16} />
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-zinc-400 font-bold">—</span>
+                        )}
+                      </td>
+                    )}
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Mobile View: Premium Responsive Card List */}
+        <div className="block md:hidden divide-y divide-zinc-50">
+          {requests.length === 0 ? (
+            <div className="py-12 text-center text-zinc-400 font-medium">No leave requests found</div>
+          ) : (
+            requests.slice(0, 5).map((request) => (
+              <div key={request.id} className={cn("p-6 space-y-4 transition-all", request.isQuotaExceeded ? "bg-red-50 hover:bg-red-100" : "hover:bg-zinc-50/50")}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Logo size="md" />
+                    <div>
+                      <p className="font-bold text-zinc-900 text-sm">{request.leaveType}</p>
+                      {isAdmin && <p className="text-[10px] font-black text-zinc-400 uppercase tracking-wider">{request.userName}</p>}
+                    </div>
+                  </div>
+                  <div className={cn(
+                    "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border",
+                    request.status === 'Approved' ? "bg-green-50 text-green-700 border-green-100" :
+                    request.status === 'Rejected' ? "bg-red-50 text-red-700 border-red-100" :
+                    "bg-amber-50 text-amber-700 border-amber-100"
+                  )}>
+                    {request.status}
+                  </div>
+                </div>
+
+                <div className="space-y-1 pl-1">
+                  <p className="text-xs font-bold text-zinc-700">
+                    Duration: <span className="text-zinc-900">
+                      {formatDate(request.startDate)}
+                      {request.startTime && ` (${request.startTime} - ${request.endTime})`}
+                      {request.startDate !== request.endDate && ` to ${formatDate(request.endDate)}`}
+                    </span>
+                  </p>
+                  <p className="text-xs font-medium text-zinc-500 italic">
+                    "{request.reason || 'No reason provided'}"
+                  </p>
+                </div>
+
+                {isAdmin && request.status === 'Pending' && canApprove(request) && (
+                  <div className="flex gap-2 pt-2">
+                    <button 
+                      onClick={() => handleAction(request.id!, 'Approved')}
+                      className="flex-1 py-3 bg-green-500 text-white rounded-xl font-bold hover:bg-green-600 transition-all shadow-sm text-xs flex items-center justify-center gap-1.5"
+                    >
+                      <CheckCircle2 size={16} />
+                      Approve
+                    </button>
+                    <button 
+                      onClick={() => handleAction(request.id!, 'Rejected')}
+                      className="flex-1 py-3 bg-red-500 text-white rounded-xl font-bold hover:bg-red-600 transition-all shadow-sm text-xs flex items-center justify-center gap-1.5"
+                    >
+                      <XCircle size={16} />
+                      Reject
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
+      {/* Apply Modal */}
+      <AnimatePresence>
+        {isModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsModalOpen(false)}
+              className="absolute inset-0 bg-zinc-900/40 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              className="relative w-full max-w-lg bg-white rounded-[2.5rem] shadow-2xl border border-zinc-100 overflow-hidden"
+            >
+              <div className="p-8 border-b border-zinc-50 flex items-center justify-between">
+                <h2 className="text-2xl font-black text-zinc-900">Apply for Leave</h2>
+                <button onClick={() => setIsModalOpen(false)} className="p-2 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-50 rounded-xl transition-all">
+                  <XCircle size={24} />
+                </button>
+              </div>
+              <form onSubmit={handleSubmitLeave} className="p-8 space-y-6">
+                <div>
+                  <label className="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2 ml-1">Leave Type</label>
+                  <select
+                    value={leaveType}
+                    onChange={(e) => setLeaveType(e.target.value as LeaveType)}
+                    className="w-full px-5 py-4 rounded-2xl bg-zinc-50 border border-zinc-100 focus:ring-2 focus:ring-orange-500 focus:bg-white outline-none transition-all font-medium"
+                  >
+                    {['Annual', 'Sick', 'Casual', 'Short'].map(type => (
+                      <option key={type} value={type}>{type}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-black text-zinc-500 uppercase tracking-widest mb-2 ml-1">
+                      {leaveType.toLowerCase() === 'short' ? 'Date' : 'Start Date'}
+                    </label>
+                    <input
+                      type="date"
+                      required
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                      className="w-full px-5 py-4 rounded-2xl bg-zinc-50 border border-zinc-100 focus:ring-2 focus:ring-orange-500 focus:bg-white outline-none transition-all font-bold text-zinc-800"
+                    />
+                  </div>
+                  {leaveType.toLowerCase() !== 'short' ? (
+                    <div>
+                      <label className="block text-xs font-black text-zinc-500 uppercase tracking-widest mb-2 ml-1">End Date</label>
+                      <input
+                        type="date"
+                        required
+                        value={endDate}
+                        onChange={(e) => setEndDate(e.target.value)}
+                        className="w-full px-5 py-4 rounded-2xl bg-zinc-50 border border-zinc-100 focus:ring-2 focus:ring-orange-500 focus:bg-white outline-none transition-all font-bold text-zinc-800"
+                      />
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-2">
+                       <div>
+                        <label className="block text-xs font-black text-zinc-500 uppercase tracking-widest mb-2">From (Time)</label>
+                        <input
+                          type="time"
+                          required
+                          value={startTime}
+                          onChange={(e) => setStartTime(e.target.value)}
+                          className="w-full px-3 py-4 rounded-2xl bg-zinc-50 border border-zinc-100 focus:ring-2 focus:ring-orange-500 focus:bg-white outline-none transition-all font-bold text-zinc-800"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-black text-zinc-500 uppercase tracking-widest mb-2">To (Time)</label>
+                        <input
+                          type="time"
+                          required
+                          value={endTime}
+                          onChange={(e) => setEndTime(e.target.value)}
+                          className="w-full px-3 py-4 rounded-2xl bg-zinc-50 border border-zinc-100 focus:ring-2 focus:ring-orange-500 focus:bg-white outline-none transition-all font-bold text-zinc-800"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2 ml-1">Reason</label>
+                  <textarea
+                    required
+                    rows={3}
+                    value={reason}
+                    onChange={(e) => setReason(e.target.value)}
+                    className="w-full px-5 py-4 rounded-2xl bg-zinc-50 border border-zinc-100 focus:ring-2 focus:ring-orange-500 focus:bg-white outline-none transition-all resize-none font-medium"
+                    placeholder="Briefly explain the reason for your leave..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2 ml-1">Attachment (Optional)</label>
+                  <div className="relative">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                      id="leave-image"
+                    />
+                    <label
+                      htmlFor="leave-image"
+                      className="flex items-center justify-center gap-2 w-full px-5 py-4 rounded-2xl bg-zinc-50 border border-dashed border-zinc-200 hover:border-orange-300 hover:bg-orange-50 transition-all cursor-pointer group"
+                    >
+                      <Camera size={20} className="text-zinc-400 group-hover:text-orange-500" />
+                      <span className="text-sm font-bold text-zinc-500 group-hover:text-orange-600">
+                        {leaveImage ? 'Image Selected' : 'Upload Image/Document'}
+                      </span>
+                    </label>
+                    {leaveImage && (
+                      <div className="mt-4 relative inline-block">
+                        <img src={leaveImage} alt="Preview" className="w-24 h-24 object-cover rounded-xl border border-zinc-100" />
+                        <button 
+                          type="button"
+                          onClick={() => setLeaveImage(null)}
+                          className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full shadow-lg"
+                        >
+                          <XCircle size={14} />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="pt-4 flex gap-4">
+                  <button
+                    type="button"
+                    onClick={() => setIsModalOpen(false)}
+                    className="flex-1 px-6 py-4 rounded-2xl border border-zinc-200 text-zinc-600 font-bold hover:bg-zinc-50 transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="flex-1 bg-orange-500 text-white px-6 py-4 rounded-2xl font-bold hover:bg-orange-600 transition-all shadow-lg shadow-orange-100 disabled:opacity-50"
+                  >
+                    {submitting ? 'Submitting...' : 'Submit Request'}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ⚠️ Quota Exceeded Warning Modal */}
+      <AnimatePresence>
+        {showQuotaWarning && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => { setShowQuotaWarning(false); setPendingSubmitData(null); }}
+              className="absolute inset-0 bg-zinc-900/60 backdrop-blur-md"
+            />
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl border border-zinc-100 overflow-hidden"
+            >
+              <div className="p-8 text-center">
+                <div className="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <AlertCircle size={32} />
+                </div>
+                <h2 className="text-2xl font-black text-zinc-900 mb-2">Leave Quota Exceeded</h2>
+                <p className="text-zinc-500 font-medium mb-8">
+                  You are applying for leave that exceeds the monthly limit of 1.5 days. Do you want to continue?
+                </p>
+                <div className="flex gap-4">
+                  <button
+                    onClick={() => { setShowQuotaWarning(false); setPendingSubmitData(null); }}
+                    className="flex-1 px-6 py-4 rounded-2xl font-bold text-zinc-600 bg-zinc-100 hover:bg-zinc-200 transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => proceedSubmit(pendingSubmitData)}
+                    className="flex-1 px-6 py-4 rounded-2xl font-bold text-white bg-orange-500 hover:bg-orange-600 transition-all shadow-lg shadow-orange-100"
+                  >
+                    Yes, Continue
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
