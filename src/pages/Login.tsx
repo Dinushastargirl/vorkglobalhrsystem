@@ -113,16 +113,6 @@ export default function Login() {
             </button>
           </form>
 
-          <div className="mt-8 p-4 bg-zinc-50 rounded-2xl border border-zinc-100">
-            <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-2">Login Credentials</p>
-            <div className="grid grid-cols-1 gap-2 text-[10px] font-bold text-zinc-400">
-              <div><strong className="text-zinc-200">Super Admin:</strong> superadmin@gmail.com / superadmin1234</div>
-              <div><strong className="text-zinc-200">Dinusha:</strong> dinushapushparajah@gmail.com / dinusha123</div>
-              <div><strong className="text-zinc-200">Janani:</strong> jananisaijanani9@gmail.com / janani123</div>
-              <div><strong className="text-zinc-200">Nisal:</strong> nisalsayuranga0710@gmail.com / nisal123</div>
-              <div><strong className="text-zinc-200">Jaiminda:</strong> msjaiminda@gmail.com / jaiminda123</div>
-            </div>
-          </div>
 
           <div className="mt-12 pt-8 border-t border-zinc-100 text-center">
             <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest">
