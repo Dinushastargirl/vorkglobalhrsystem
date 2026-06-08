@@ -58,6 +58,7 @@ export interface UserProfile {
   accountNo?: string;
   accountHolderName?: string;
   nic?: string;
+  address?: string;
   nickname?: string;
   extraDays?: number;
   employmentHistory?: EmploymentHistory[];
@@ -68,11 +69,26 @@ export interface UserProfile {
 export interface AttendanceRecord {
   id?: string;
   userId: string;
+  userName: string;
   date: string;
-  checkIn: any; // Date
-  checkOut?: any;
+  checkIn: string;
+  checkOut?: string;
+  breakStart?: string;
+  breakEnd?: string;
   isLate: boolean;
   isEarlyOut: boolean;
+  status?: string;
+}
+
+export interface AttendanceSupportRequest {
+  id: string;
+  userId: string;
+  userName: string;
+  date: string;
+  reason: string;
+  type: 'Missed Check In' | 'Missed Check Out' | 'System Error' | 'Other';
+  status: 'Pending' | 'Approved' | 'Rejected';
+  createdAt: string;
 }
 
 export type LeaveType = 'Annual' | 'Sick' | 'Casual' | 'Short';
@@ -104,12 +120,54 @@ export interface Holiday {
   type: 'Public' | 'Bank' | 'Mercantile';
 }
 
+export type TaskPriority = 'Low' | 'Medium' | 'High' | 'Urgent';
+export type TaskStatus = 'Not Started' | 'In Progress' | 'Pending Review' | 'Completed' | 'Overdue';
+
+export interface TaskComment {
+  id: string;
+  userId: string;
+  userName: string;
+  text: string;
+  createdAt: string;
+}
+
 export interface Task {
   id?: string;
-  userId: string;
   title: string;
-  completed: boolean;
-  createdAt: any;
+  description: string;
+  assignedTo: string;
+  assignedToName?: string;
+  assignedBy: string;
+  assignedByName?: string;
+  priority: TaskPriority;
+  startDate: string;
+  deadline: string;
+  estimatedHours: number;
+  progressPercent: number;
+  status: TaskStatus;
+  category?: string;
+  attachments?: string[];
+  comments: TaskComment[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type CourseType = 'Course' | 'Certification' | 'Training Program' | 'Learning Material';
+export type CourseStatus = 'Not Started' | 'In Progress' | 'Completed';
+
+export interface Course {
+  id: string;
+  title: string;
+  description: string;
+  type: CourseType;
+  durationHours: number;
+  deadline: string;
+  assignedTo: string;
+  assignedBy: string;
+  status: CourseStatus;
+  progressPercent: number;
+  proofUrl?: string;
+  createdAt: string;
 }
 
 export interface PayrollRecord {

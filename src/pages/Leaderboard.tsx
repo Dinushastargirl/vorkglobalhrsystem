@@ -1,17 +1,31 @@
 import React, { useState, useEffect } from 'react';
-import { Trophy, Medal, Award, TrendingUp, Star } from 'lucide-react';
+import { Trophy, Medal, Award, TrendingUp, Star, Shield } from 'lucide-react';
 import { motion } from 'motion/react';
 import { UserProfile } from '../types';
 import { cn } from '../lib/utils';
 
 import * as userService from '../services/userService';
 import * as taskService from '../services/taskService';
-import * as qualificationService from '../services/qualificationService';
+import * as lmsService from '../services/lmsService';
+import * as attendanceService from '../services/attendanceService';
 
 interface LeaderboardEntry extends UserProfile {
   score: number;
+  level: number;
   tasksCompleted: number;
-  qualsCompleted: number;
+  coursesCompleted: number;
+  attendanceScore: number;
+}
+
+const LEVEL_THRESHOLDS = [
+  0, 50, 150, 300, 500, 750, 1050, 1400, 1800, 2250, 2750, 3300, 3900, 4550, 5250
+];
+
+function getLevel(score: number) {
+  for (let i = LEVEL_THRESHOLDS.length - 1; i >= 0; i--) {
+    if (score >= LEVEL_THRESHOLDS[i]) return i + 1;
+  }
+  return 1;
 }
 
 export default function Leaderboard() {
@@ -22,23 +36,31 @@ export default function Leaderboard() {
     const loadData = async () => {
       setLoading(true);
       try {
-        const [employees, tasks, quals] = await Promise.all([
+        const [employees, tasks, courses, attendance] = await Promise.all([
           userService.getEmployees(),
-          taskService.getAllTasks(),
-          qualificationService.getAllQualifications()
+          taskService.getTasks(),
+          lmsService.getCourses(),
+          attendanceService.getAttendance()
         ]);
 
         const entries: LeaderboardEntry[] = employees.filter(e => e.role !== 'super' && e.role !== 'owner').map(emp => {
-          const empTasks = tasks.filter(t => t.userId === emp.uid && t.completed);
-          const empQuals = quals.filter(q => q.userId === emp.uid && q.completed);
+          const empTasks = tasks.filter(t => t.assignedTo === emp.uid && t.status === 'Completed');
+          const empCourses = courses.filter(c => c.assignedTo === emp.uid && c.status === 'Completed');
+          const empAttendance = attendance.filter(a => a.userId === emp.uid && a.checkIn && !a.isLate);
           
-          const score = (empTasks.length * 10) + (empQuals.length * 20);
+          const tasksScore = empTasks.length * 10;
+          const coursesScore = empCourses.length * 50;
+          const attendanceScore = empAttendance.length * 5;
+          
+          const score = tasksScore + coursesScore + attendanceScore;
 
           return {
             ...emp,
             tasksCompleted: empTasks.length,
-            qualsCompleted: empQuals.length,
-            score
+            coursesCompleted: empCourses.length,
+            attendanceScore: attendanceScore,
+            score,
+            level: getLevel(score)
           };
         });
 
@@ -60,11 +82,12 @@ export default function Leaderboard() {
     <div className="space-y-8 pb-12">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black text-zinc-900">Leaderboard</h1>
-          <p className="text-zinc-500 font-medium">Top performers based on task completion and qualifications</p>
+          <h1 className="text-3xl font-black text-zinc-900">Company Leaderboard</h1>
+          <p className="text-zinc-500 font-medium">15-Level Gamification & Performance Ranking</p>
         </div>
-        <div className="p-3 bg-yellow-50 text-yellow-600 rounded-2xl">
+        <div className="p-3 bg-yellow-50 text-yellow-600 rounded-2xl flex items-center gap-3 pr-5">
           <Trophy size={24} />
+          <span className="font-black tracking-widest uppercase text-sm">Season 1</span>
         </div>
       </div>
 
@@ -83,6 +106,7 @@ export default function Leaderboard() {
                 <span className="text-2xl font-black text-zinc-400">2</span>
                 <span className="text-xs font-bold text-zinc-600 uppercase tracking-widest mt-2 truncate w-full text-center px-2">{leaders[1].name}</span>
                 <span className="text-sm font-black text-zinc-800 mt-1">{leaders[1].score} pts</span>
+                <span className="text-[10px] font-black bg-zinc-300 text-zinc-700 px-2 py-0.5 rounded-full mt-2">LVL {leaders[1].level}</span>
               </div>
             </motion.div>
           )}
@@ -98,6 +122,7 @@ export default function Leaderboard() {
                 <span className="text-3xl font-black text-yellow-600">1</span>
                 <span className="text-sm font-bold text-yellow-800 uppercase tracking-widest mt-2 truncate w-full text-center px-2">{leaders[0].name}</span>
                 <span className="text-lg font-black text-yellow-900 mt-1">{leaders[0].score} pts</span>
+                <span className="text-xs font-black bg-yellow-400 text-yellow-900 px-3 py-1 rounded-full mt-2">LVL {leaders[0].level}</span>
               </div>
             </motion.div>
           )}
@@ -113,6 +138,7 @@ export default function Leaderboard() {
                 <span className="text-2xl font-black text-orange-500">3</span>
                 <span className="text-xs font-bold text-orange-800 uppercase tracking-widest mt-1 truncate w-full text-center px-2">{leaders[2].name}</span>
                 <span className="text-sm font-black text-orange-900 mt-0.5">{leaders[2].score} pts</span>
+                <span className="text-[10px] font-black bg-orange-300 text-orange-800 px-2 py-0.5 rounded-full mt-2">LVL {leaders[2].level}</span>
               </div>
             </motion.div>
           )}
@@ -136,32 +162,39 @@ export default function Leaderboard() {
                   <div className="w-10 h-10 rounded-full bg-zinc-200 flex items-center justify-center font-black text-zinc-500">
                     {idx + 4}
                   </div>
-                  <div className="w-12 h-12 rounded-xl bg-white border-2 border-white shadow-sm flex items-center justify-center font-black text-zinc-400 overflow-hidden">
+                  <div className="w-12 h-12 rounded-xl bg-white border-2 border-white shadow-sm flex items-center justify-center font-black text-zinc-400 overflow-hidden relative">
                      {leader.photoUrl ? <img src={leader.photoUrl} alt="" className="w-full h-full object-cover"/> : leader.name.charAt(0)}
                   </div>
                   <div>
-                    <p className="font-bold text-zinc-900">{leader.name}</p>
-                    <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">{leader.branch}</p>
+                    <p className="font-bold text-zinc-900 flex items-center gap-2">
+                      {leader.name}
+                      <span className="text-[10px] font-black bg-blue-100 text-blue-700 px-2 py-0.5 rounded-md flex items-center gap-1">
+                        <Shield size={10} /> LVL {leader.level}
+                      </span>
+                    </p>
+                    <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mt-1">{leader.branch || 'Headquarters'}</p>
                   </div>
                 </div>
                 
                 <div className="flex items-center gap-6">
                   <div className="hidden sm:flex items-center gap-4 text-xs font-bold text-zinc-500">
-                    <div className="flex items-center gap-1 bg-zinc-100 px-2 py-1 rounded-lg">
-                      <Star size={12} className="text-yellow-500"/> {leader.tasksCompleted} Tasks
+                    <div className="flex items-center gap-1.5 bg-zinc-100 px-3 py-1.5 rounded-lg">
+                      <Star size={14} className="text-yellow-500"/> {leader.tasksCompleted} Tasks
                     </div>
-                    <div className="flex items-center gap-1 bg-zinc-100 px-2 py-1 rounded-lg">
-                      <Award size={12} className="text-blue-500"/> {leader.qualsCompleted} Quals
+                    <div className="flex items-center gap-1.5 bg-zinc-100 px-3 py-1.5 rounded-lg">
+                      <Award size={14} className="text-blue-500"/> {leader.coursesCompleted} Courses
                     </div>
                   </div>
-                  <div className="text-lg font-black text-blue-600 bg-blue-50 px-4 py-2 rounded-2xl">
+                  <div className="text-lg font-black text-blue-600 bg-blue-50 px-5 py-2.5 rounded-2xl shadow-sm">
                     {leader.score} pts
                   </div>
                 </div>
               </motion.div>
             ))}
             {leaders.length <= 3 && (
-              <div className="text-center py-8 text-zinc-400 font-medium">No other employees ranked yet.</div>
+              <div className="text-center py-8 text-zinc-400 font-medium bg-zinc-50 rounded-3xl border border-zinc-100 border-dashed">
+                Keep participating to appear on the leaderboard!
+              </div>
             )}
           </div>
         </div>

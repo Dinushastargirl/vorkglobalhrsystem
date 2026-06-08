@@ -18,7 +18,7 @@ import Calendar from './pages/Calendar';
 import Profile from './pages/Profile';
 import BankDetails from './pages/BankDetails';
 import Tasks from './pages/Tasks';
-import Qualifications from './pages/Qualifications';
+import LMS from './pages/LMS';
 import Leaderboard from './pages/Leaderboard';
 
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
@@ -49,7 +49,7 @@ const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
             <Menu size={22} />
           </button>
             <Logo size="sm" />
-            <span className="ml-3 font-black text-zinc-900 tracking-tight">HR PULSE</span>
+            <span className="ml-3 font-black text-zinc-900 tracking-tight">VORKCA HR</span>
         </header>
         <main className="flex-1 p-4 md:p-8 lg:p-12 overflow-y-auto max-h-screen">
           <div className="max-w-7xl mx-auto">
@@ -78,7 +78,7 @@ function AppRoutes() {
       <Route path="/performance" element={<PrivateRoute><Performance /></PrivateRoute>} />
       <Route path="/calendar" element={<PrivateRoute><Calendar /></PrivateRoute>} />
       <Route path="/tasks" element={<PrivateRoute><Tasks /></PrivateRoute>} />
-      <Route path="/qualifications" element={<PrivateRoute><Qualifications /></PrivateRoute>} />
+      <Route path="/lms" element={<PrivateRoute><LMS /></PrivateRoute>} />
       <Route path="/leaderboard" element={<PrivateRoute><Leaderboard /></PrivateRoute>} />
       <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
       <Route path="*" element={<Navigate to="/" replace />} />

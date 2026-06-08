@@ -35,18 +35,63 @@ function getStoredEmployees(): UserProfile[] {
         leaveQuotas: { annual: 14, sick: 7, casual: 7, short: 8 },
         usedLeaves: { annual: 0, sick: 0, casual: 0, short: 0 },
         sortOrder: i + 1,
-        bankName: 'Demo Bank',
-        bankBranch: 'Main Branch',
-        accountNo: '123456789',
-        accountHolderName: emp.name,
-        nic: '123456789V',
-        nickname: emp.name.split(' ')[0]
+        bankName: emp.bankName || 'Demo Bank',
+        bankBranch: emp.bankBranch || 'Main Branch',
+        accountNo: emp.accountNo || '123456789',
+        accountHolderName: emp.accountHolderName || emp.name,
+        nic: emp.nic || '123456789V',
+        address: emp.address || '',
+        nickname: (emp.name || '').split(' ')[0]
       };
     });
     localStorage.setItem(KEY, JSON.stringify(initial));
     return initial;
   }
-  return JSON.parse(data);
+  
+  let emps: UserProfile[] = JSON.parse(data);
+  let patched = false;
+
+  const dinusha = emps.find(e => e.email === 'dinushapushparajah@gmail.com');
+  if (dinusha && dinusha.accountNo !== '007020110442') {
+    dinusha.bankName = 'HNB bank';
+    dinusha.accountNo = '007020110442';
+    dinusha.bankBranch = 'pettah';
+    dinusha.accountHolderName = 'P Dinusha';
+    patched = true;
+  }
+
+  const janani = emps.find(e => e.email === 'jananisaijanani9@gmail.com');
+  if (janani && janani.accountNo !== '102003085136') {
+    janani.bankName = 'DFCC Bank';
+    janani.accountNo = '102003085136';
+    janani.bankBranch = 'Kegalle - 049';
+    janani.accountHolderName = 'K S Janani';
+    patched = true;
+  }
+
+  const nisal = emps.find(e => e.email === 'nisalsayuranga0710@gmail.com');
+  if (nisal && nisal.accountNo !== '8010517853') {
+    nisal.name = 'F P N S DIAS(nisal)';
+    nisal.bankName = 'COMMERCIAL BANK';
+    nisal.accountNo = '8010517853';
+    nisal.bankBranch = 'WADDUWA';
+    nisal.accountHolderName = 'F P N S DIAS';
+    patched = true;
+  }
+
+  const jaiminda = emps.find(e => e.email === 'msjaiminda@gmail.com');
+  if (jaiminda && jaiminda.nic !== '200132803902') {
+    jaiminda.name = 'Sasindu Jayaminda Mohotti';
+    jaiminda.nic = '200132803902';
+    jaiminda.address = '"Sasindu"Galagama,North, Nakulugamuwa.';
+    patched = true;
+  }
+
+  if (patched) {
+    localStorage.setItem(KEY, JSON.stringify(emps));
+  }
+
+  return emps;
 }
 
 function saveStoredEmployees(emps: UserProfile[]) {

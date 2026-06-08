@@ -1,19 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { 
   ChevronLeft, ChevronRight, Calendar as CalendarIcon, 
-  MapPin, Clock, Info, Gift, PartyPopper, Moon
+  MapPin, Clock, Info, Gift, PartyPopper, Moon,
+  ListTodo, BookOpen, Target
 } from 'lucide-react';
 import { cn, formatDate } from '../lib/utils';
 import { useAuth } from '../hooks/useAuth';
-import { LeaveRequest, Holiday } from '../types';
+import { LeaveRequest, Holiday, Task, Course } from '../types';
 import * as leaveService from '../services/leaveService';
-import * as attendanceService from '../services/attendanceService';
+import * as taskService from '../services/taskService';
+import * as lmsService from '../services/lmsService';
 
 export default function Calendar() {
   const { user, uid } = useAuth();
   const [currentDate, setCurrentDate] = useState(new Date());
+  
   const [requests, setRequests] = useState<LeaveRequest[]>([]);
   const [holidays, setHolidays] = useState<Holiday[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [courses, setCourses] = useState<Course[]>([]);
+  
   const [loading, setLoading] = useState(true);
 
   const year = currentDate.getFullYear();
@@ -23,10 +29,16 @@ export default function Calendar() {
     if (!uid) return;
     setLoading(true);
     try {
-      const data = await leaveService.getLeaves(uid);
-      setRequests(data || []);
+      const [leavesData, tasksData, coursesData] = await Promise.all([
+        leaveService.getLeaves(uid),
+        taskService.getTasks(uid),
+        lmsService.getCourses(uid)
+      ]);
+      setRequests(leavesData || []);
+      setTasks(tasksData || []);
+      setCourses(coursesData || []);
     } catch (err) {
-      console.error('Error loading leaves for calendar:', err);
+      console.error('Error loading calendar data:', err);
     } finally {
       setLoading(false);
     }
@@ -61,16 +73,12 @@ export default function Calendar() {
     { id: 'sl-22', date: '2026-12-25', title: 'Christmas Day', type: 'Public' },
   ];
 
-  // 2. Internet Holiday Sync (Sri Lanka)
   useEffect(() => {
     const fetchHolidays = async () => {
-      // Use 100% accurate static list as primary for 2026
       if (year === 2026) {
         setHolidays(SRI_LANKA_HOLIDAYS_2026);
         return;
       }
-
-      // Dynamic fallback for other years
       try {
         const response = await fetch(`https://date.nager.at/api/v3/PublicHolidays/${year}/LK`);
         if (response.ok) {
@@ -86,7 +94,6 @@ export default function Calendar() {
         console.error('Holiday fetch error:', err);
       }
     };
-
     fetchHolidays();
   }, [year]);
 
@@ -101,39 +108,41 @@ export default function Calendar() {
     "July", "August", "September", "October", "November", "December"
   ];
 
-  // Helper to check if a specific day is a holiday or on leave
   const getDayInfo = (day: number) => {
     const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     
     const holiday = holidays.find(h => h.date === dateStr);
-    const userLeave = requests.find(r => {
-      const start = r.startDate;
-      const end = r.endDate;
-      return dateStr >= start && dateStr <= end;
-    });
+    const userLeave = requests.find(r => dateStr >= r.startDate && dateStr <= r.endDate);
+    const dayTasks = tasks.filter(t => t.deadline === dateStr);
+    const dayCourses = courses.filter(c => c.deadline === dateStr);
 
-    return { holiday, userLeave };
+    return { holiday, userLeave, dayTasks, dayCourses };
   };
 
   const nextMonth = () => {
-    if (month === 11) return; // Restrict to current year
+    if (month === 11) return;
     setCurrentDate(new Date(year, month + 1, 1));
   };
   const prevMonth = () => {
-    if (month === 0) return; // Restrict to current year
+    if (month === 0) return;
     setCurrentDate(new Date(year, month - 1, 1));
   };
 
   const upcomingHolidays = holidays
     .filter(h => new Date(h.date) >= new Date())
-    .slice(0, 4);
+    .slice(0, 3);
+
+  const upcomingTasks = tasks
+    .filter(t => new Date(t.deadline) >= new Date() && t.status !== 'Completed')
+    .sort((a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime())
+    .slice(0, 3);
 
   return (
     <div className="space-y-8 pb-12">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-black text-zinc-900">Personal Calendar</h1>
-          <p className="text-zinc-500 font-medium">{year} Sri Lankan Holidays & Personal Leaves</p>
+          <p className="text-zinc-500 font-medium">Holidays, Leaves, Tasks, and Deadlines</p>
         </div>
         <div className="flex items-center gap-4 bg-white p-2 rounded-2xl border border-zinc-100 shadow-sm">
           <button 
@@ -169,8 +178,10 @@ export default function Calendar() {
           <div className="grid grid-cols-7 gap-2">
             {blanks.map(b => <div key={`blank-${b}`} className="aspect-square" />)}
             {days.map(day => {
-              const { holiday, userLeave } = getDayInfo(day);
+              const { holiday, userLeave, dayTasks, dayCourses } = getDayInfo(day);
               const isToday = day === new Date().getDate() && month === new Date().getMonth() && year === new Date().getFullYear();
+              
+              const hasActivity = holiday || userLeave || dayTasks.length > 0 || dayCourses.length > 0;
               
               return (
                 <div 
@@ -190,24 +201,27 @@ export default function Calendar() {
                     {day}
                   </span>
                   
-                  <div className="absolute bottom-2 flex gap-1 items-center">
-                    {holiday && (
-                      <div className="w-1 h-1 rounded-full bg-blue-600 shadow-sm" />
-                    )}
-                    {userLeave && (
-                      <div className={cn(
-                        "w-1 h-1 rounded-full shadow-sm",
-                        userLeave.status === 'Approved' ? "bg-green-500" : "bg-amber-500"
-                      )} />
-                    )}
+                  <div className="absolute bottom-1.5 flex gap-1 items-center flex-wrap justify-center px-1">
+                    {holiday && <div className="w-1.5 h-1.5 rounded-full bg-blue-600 shadow-sm" />}
+                    {userLeave && <div className={cn("w-1.5 h-1.5 rounded-full shadow-sm", userLeave.status === 'Approved' ? "bg-green-500" : "bg-amber-500")} />}
+                    {dayTasks.length > 0 && <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 shadow-sm" title="Tasks Due" />}
+                    {dayCourses.length > 0 && <div className="w-1.5 h-1.5 rounded-full bg-purple-500 shadow-sm" title="Course Deadlines" />}
                   </div>
 
-                  {(holiday || userLeave) && (
-                    <div className="absolute bottom-full mb-2 hidden group-hover:block z-10 w-40 p-2 bg-zinc-900 text-white text-[10px] font-bold rounded-lg text-center shadow-xl leading-snug">
-                      {holiday && <p className="text-blue-400">🌕 {holiday.title}</p>}
-                      {userLeave && <p className={userLeave.status === 'Approved' ? "text-green-400" : "text-amber-400"}>
-                        {userLeave.status === 'Approved' ? '✅' : '⏳'} {userLeave.leaveType} {(userLeave.status)}
-                      </p>}
+                  {hasActivity && (
+                    <div className="absolute bottom-full mb-2 hidden group-hover:block z-10 w-48 p-3 bg-zinc-900 text-white text-[10px] font-bold rounded-xl text-left shadow-xl leading-snug">
+                      {holiday && <p className="text-blue-400 mb-1 flex items-center gap-1"><Moon size={10}/> {holiday.title}</p>}
+                      {userLeave && (
+                        <p className={cn("mb-1", userLeave.status === 'Approved' ? "text-green-400" : "text-amber-400")}>
+                          {userLeave.status === 'Approved' ? '✅' : '⏳'} {userLeave.leaveType} Leave
+                        </p>
+                      )}
+                      {dayTasks.map((t, i) => (
+                        <p key={`t-${i}`} className="text-indigo-300 mb-0.5 flex items-center gap-1 truncate"><ListTodo size={10} className="shrink-0"/> {t.title}</p>
+                      ))}
+                      {dayCourses.map((c, i) => (
+                        <p key={`c-${i}`} className="text-purple-300 flex items-center gap-1 truncate"><BookOpen size={10} className="shrink-0"/> {c.title}</p>
+                      ))}
                     </div>
                   )}
                 </div>
@@ -216,31 +230,21 @@ export default function Calendar() {
           </div>
         </div>
 
-        {/* Upcoming Events List */}
+        {/* Sidebar */}
         <div className="space-y-6">
           <div className="bg-zinc-900 p-8 rounded-[2.5rem] text-white">
             <div className="flex items-center gap-3 mb-6">
-              <PartyPopper className="text-blue-400" size={24} />
-              <h3 className="font-black text-lg">Internet Sync</h3>
+              <ListTodo className="text-indigo-400" size={24} />
+              <h3 className="font-black text-lg">Upcoming Tasks</h3>
             </div>
-            <div className="space-y-6">
-              {upcomingHolidays.length === 0 ? (
-                <p className="text-[10px] uppercase font-black text-zinc-500 tracking-widest text-center py-4">No holidays found</p>
+            <div className="space-y-4">
+              {upcomingTasks.length === 0 ? (
+                <p className="text-[10px] uppercase font-black text-zinc-500 tracking-widest text-center py-2">No upcoming tasks</p>
               ) : (
-                upcomingHolidays.map((h, i) => (
-                  <div key={i} className="flex gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-white/10 flex flex-col items-center justify-center shrink-0 border border-white/5">
-                      <span className="text-[10px] font-black uppercase text-blue-400">
-                        {new Date(h.date).toLocaleDateString('en-US', { month: 'short' })}
-                      </span>
-                      <span className="text-lg font-black leading-none">
-                        {new Date(h.date).getDate()}
-                      </span>
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-sm leading-tight">{h.title}</h4>
-                      <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mt-0.5">SL Public Holiday</p>
-                    </div>
+                upcomingTasks.map((t, i) => (
+                  <div key={i} className="flex flex-col gap-1 pb-3 border-b border-white/10 last:border-0 last:pb-0">
+                    <h4 className="font-bold text-sm leading-tight truncate">{t.title}</h4>
+                    <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">Due: {formatDate(t.deadline)}</p>
                   </div>
                 ))
               )}
@@ -250,23 +254,28 @@ export default function Calendar() {
           <div className="bg-white p-8 rounded-[2.5rem] border border-zinc-100 shadow-sm">
             <div className="flex items-center gap-3 mb-4">
               <Info className="text-zinc-400" size={20} />
-              <h3 className="font-black text-zinc-900">Personal View</h3>
+              <h3 className="font-black text-zinc-900">Legend</h3>
             </div>
-            <p className="text-sm text-zinc-500 font-medium leading-relaxed">
-              This calendar automatically pulls official Sri Lankan holidays for **{year}**. Your submitted leave requests are also mapped here with real-time status updates:
-            </p>
-            <div className="mt-4 space-y-2">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-green-500" />
-                <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-wider">Approved Leave</span>
+            <div className="space-y-3 mt-4">
+              <div className="flex items-center gap-3 p-2 rounded-xl bg-green-50 border border-green-100">
+                <div className="w-2.5 h-2.5 rounded-full bg-green-500" />
+                <span className="text-[10px] font-black text-green-700 uppercase tracking-widest">Approved Leave</span>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-amber-500" />
-                <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-wider">Pending Status</span>
+              <div className="flex items-center gap-3 p-2 rounded-xl bg-amber-50 border border-amber-100">
+                <div className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+                <span className="text-[10px] font-black text-amber-700 uppercase tracking-widest">Pending Leave</span>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-blue-600" />
-                <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-wider">Public Holiday</span>
+              <div className="flex items-center gap-3 p-2 rounded-xl bg-blue-50 border border-blue-100">
+                <div className="w-2.5 h-2.5 rounded-full bg-blue-600" />
+                <span className="text-[10px] font-black text-blue-700 uppercase tracking-widest">Public Holiday</span>
+              </div>
+              <div className="flex items-center gap-3 p-2 rounded-xl bg-indigo-50 border border-indigo-100">
+                <div className="w-2.5 h-2.5 rounded-full bg-indigo-500" />
+                <span className="text-[10px] font-black text-indigo-700 uppercase tracking-widest">Task Deadline</span>
+              </div>
+              <div className="flex items-center gap-3 p-2 rounded-xl bg-purple-50 border border-purple-100">
+                <div className="w-2.5 h-2.5 rounded-full bg-purple-500" />
+                <span className="text-[10px] font-black text-purple-700 uppercase tracking-widest">Course Deadline</span>
               </div>
             </div>
           </div>

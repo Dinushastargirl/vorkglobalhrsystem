@@ -113,7 +113,7 @@ export default function Dashboard() {
     const lateLogs = empAttendance.filter(a => a.isLate).length;
     const punctuality = totalLogs > 0 ? Math.round(((totalLogs - lateLogs) / totalLogs) * 100) : 100;
 
-    const finishedTasks = empTasks.filter(t => t.completed).length;
+    const finishedTasks = empTasks.filter(t => t.status === 'Completed').length;
     const efficiency = empTasks.length > 0 ? Math.round((finishedTasks / empTasks.length) * 100) : 0;
 
     const reliability = totalLogs > 0 ? Math.round((empAttendance.filter(a => a.checkOut).length / totalLogs) * 100) : 100;
@@ -157,8 +157,30 @@ export default function Dashboard() {
     }
   };
 
-  const toggleTask = async (id: string, completed: boolean) => {
-    await taskService.toggleTask(id, !completed);
+  const handleStartBreak = async () => {
+    if (!uid) return;
+    try {
+      await attendanceService.startBreak(uid);
+      toast.success('Break started');
+      loadData();
+    } catch (err) {
+      toast.error('Failed to start break');
+    }
+  };
+
+  const handleEndBreak = async () => {
+    if (!uid) return;
+    try {
+      await attendanceService.endBreak(uid);
+      toast.success('Break ended');
+      loadData();
+    } catch (err) {
+      toast.error('Failed to end break');
+    }
+  };
+
+  const toggleTask = async (id: string, isCompleted: boolean) => {
+    await taskService.updateTaskStatus(id, isCompleted ? 'Not Started' : 'Completed', isCompleted ? 0 : 100);
     loadData();
   };
 
@@ -398,7 +420,7 @@ export default function Dashboard() {
     }
   });
 
-  if (loading) return <div className="p-8 text-center text-zinc-400 font-bold">Syncing HR Pulse...</div>;
+  if (loading) return <div className="p-8 text-center text-zinc-400 font-bold">Syncing VORKCA HR...</div>;
 
   const greeting = getGreeting();
   const isAdmin = user?.role === 'owner' || user?.role === 'super' || user?.role === 'hr';
@@ -482,13 +504,33 @@ export default function Dashboard() {
                         Check In Now
                       </button>
                     ) : !(attendance.find(r => r.date === getLocalToday() && r.checkOut)) ? (
-                      <button 
-                        onClick={handleCheckOut}
-                        className="bg-white text-zinc-900 px-6 py-3 rounded-2xl font-bold flex items-center gap-2 hover:bg-zinc-100 transition-all shadow-lg"
-                      >
-                        <ArrowDownRight size={20} />
-                        Check Out
-                      </button>
+                      <>
+                        {!attendance.find(r => r.date === getLocalToday())?.breakStart ? (
+                          <button 
+                            onClick={handleStartBreak}
+                            className="bg-amber-500 text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 hover:bg-amber-600 transition-all shadow-lg shadow-amber-900/20"
+                          >
+                            <Timer size={20} />
+                            Start Break
+                          </button>
+                        ) : !attendance.find(r => r.date === getLocalToday())?.breakEnd ? (
+                          <button 
+                            onClick={handleEndBreak}
+                            className="bg-green-500 text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 hover:bg-green-600 transition-all shadow-lg shadow-green-900/20"
+                          >
+                            <Timer size={20} />
+                            End Break
+                          </button>
+                        ) : null}
+                        
+                        <button 
+                          onClick={handleCheckOut}
+                          className="bg-white text-zinc-900 px-6 py-3 rounded-2xl font-bold flex items-center gap-2 hover:bg-zinc-100 transition-all shadow-lg"
+                        >
+                          <ArrowDownRight size={20} />
+                          Check Out
+                        </button>
+                      </>
                     ) : (
                       <div className="bg-green-500/20 text-green-400 border border-green-500/30 px-6 py-3 rounded-2xl font-bold flex items-center gap-2">
                         <CheckCircle2 size={20} />
@@ -685,37 +727,40 @@ export default function Dashboard() {
                   <p className="text-sm text-zinc-400 font-medium">No tasks for today</p>
                 </div>
               ) : (
-                tasks.map(task => (
-                  <div 
-                    key={task.id} 
-                    className={cn(
-                      "group flex items-center gap-3 p-4 rounded-2xl border transition-all",
-                      task.completed ? "bg-zinc-50 border-zinc-100 opacity-60" : "bg-white border-zinc-100 hover:border-blue-200"
-                    )}
-                  >
+                tasks.map(task => {
+                  const isCompleted = task.status === 'Completed';
+                  return (
                     <div 
-                      onClick={() => toggleTask(task.id!, task.completed)}
+                      key={task.id} 
                       className={cn(
-                        "w-5 h-5 rounded-md border flex items-center justify-center transition-all cursor-pointer shadow-sm",
-                        task.completed ? "bg-green-500 border-green-500 text-white" : "border-zinc-300 group-hover:border-blue-400 bg-white"
+                        "group flex items-center gap-3 p-4 rounded-2xl border transition-all",
+                        isCompleted ? "bg-zinc-50 border-zinc-100 opacity-60" : "bg-white border-zinc-100 hover:border-blue-200"
                       )}
                     >
-                      {task.completed && <CheckCircle2 size={12} />}
+                      <div 
+                        onClick={() => toggleTask(task.id!, isCompleted)}
+                        className={cn(
+                          "w-5 h-5 rounded-md border flex items-center justify-center transition-all cursor-pointer shadow-sm",
+                          isCompleted ? "bg-green-500 border-green-500 text-white" : "border-zinc-300 group-hover:border-blue-400 bg-white"
+                        )}
+                      >
+                        {isCompleted && <CheckCircle2 size={12} />}
+                      </div>
+                      <span 
+                        onClick={() => toggleTask(task.id!, isCompleted)}
+                        className={cn("flex-1 text-sm font-medium cursor-pointer", isCompleted ? "line-through text-zinc-400" : "text-zinc-700")}
+                      >
+                        {task.title}
+                      </span>
+                      <button 
+                        onClick={() => deleteTask(task.id!)}
+                        className="p-1.5 text-zinc-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                      >
+                        <Trash2 size={14} />
+                      </button>
                     </div>
-                    <span 
-                      onClick={() => toggleTask(task.id!, task.completed)}
-                      className={cn("flex-1 text-sm font-medium cursor-pointer", task.completed ? "line-through text-zinc-400" : "text-zinc-700")}
-                    >
-                      {task.title}
-                    </span>
-                    <button 
-                      onClick={() => deleteTask(task.id!)}
-                      className="p-1.5 text-zinc-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </div>

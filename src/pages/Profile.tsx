@@ -129,7 +129,7 @@ export default function Profile() {
     // Header
     doc.setFontSize(22);
     doc.setTextColor(37, 99, 235);
-    doc.text('HR PULSE', 14, 20);
+    doc.text('VORKCA HR', 14, 20);
     
     doc.setFontSize(14);
     doc.setTextColor(50, 50, 50);

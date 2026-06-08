@@ -42,7 +42,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     { name: 'Performance', icon: TrendingUp, path: '/performance', roles: ['super', 'owner', 'hr', 'employee'] },
     { name: 'Calendar', icon: Calendar, path: '/calendar', roles: ['super', 'owner', 'hr', 'employee'] },
     { name: 'Tasks', icon: ListTodo, path: '/tasks', roles: ['super', 'owner', 'hr', 'employee'] },
-    { name: 'Qualifications', icon: Award, path: '/qualifications', roles: ['super', 'owner', 'hr', 'employee'] },
+    { name: 'Learning (LMS)', icon: Award, path: '/lms', roles: ['super', 'owner', 'hr', 'employee'] },
     { name: 'Leaderboard', icon: Trophy, path: '/leaderboard', roles: ['super', 'owner', 'hr', 'employee'] },
     { name: 'Profile', icon: User, path: '/profile', roles: ['super', 'owner', 'hr', 'employee'] },
   ];
@@ -66,7 +66,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         <div className="p-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Logo size="md" />
-            <h1 className="text-xl font-black tracking-tight text-zinc-900">HR PULSE</h1>
+            <h1 className="text-xl font-black tracking-tight text-zinc-900">VORKCA HR</h1>
           </div>
           <button 
             onClick={onClose}

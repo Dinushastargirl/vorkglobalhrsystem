@@ -1,63 +1,41 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  UserCheck, Timer, Search, Filter, Download, Trash2,
-  Clock, ArrowUpRight, ArrowDownRight, Calendar
+  Clock, ArrowUpRight, ArrowDownRight, MapPin, Search, Plus, X,
+  Coffee, AlertCircle, CheckCircle2, LifeBuoy, Filter
 } from 'lucide-react';
-import { utils, writeFile } from 'xlsx';
-import { AttendanceRecord, UserProfile } from '../types';
-import * as userService from '../services/userService';
-import * as attendanceService from '../services/attendanceService';
-import { useAuth } from '../hooks/useAuth';
-import { cn, formatDate } from '../lib/utils';
-import { motion } from 'motion/react';
 import { toast } from 'sonner';
+import { motion, AnimatePresence } from 'motion/react';
+import { AttendanceRecord, AttendanceSupportRequest } from '../types';
+import { cn, formatDate } from '../lib/utils';
+import { useAuth } from '../hooks/useAuth';
+import * as attendanceService from '../services/attendanceService';
 
 export default function Attendance() {
-  const { user } = useAuth();
-  const [records, setRecords] = useState<AttendanceRecord[]>([]);
-  const [employees, setEmployees] = useState<UserProfile[]>([]);
-  const [search, setSearch] = useState('');
-  const [filterBranch, setFilterBranch] = useState('All');
-  const [selectedDate, setSelectedDate] = useState<string>('');
+  const { user, uid } = useAuth();
+  const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
+  const [supportReqs, setSupportReqs] = useState<AttendanceSupportRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  
   const [currentTime, setCurrentTime] = useState(new Date());
-
-  useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 10000); // Update every 10s for better responsiveness
-    return () => clearInterval(timer);
-  }, []);
-
-  const todayStr = new Date().toISOString().split('T')[0];
-  const activeRecord = records.find(r => r.userId === user?.uid && r.date === todayStr && !r.checkOut);
+  const [searchQuery, setSearchQuery] = useState('');
   
-  let checkoutLocked = false;
-  let remainingMinutes = 0;
-  
-  if (activeRecord) {
-    const checkInTime = new Date(activeRecord.checkIn).getTime();
-    const elapsedMs = currentTime.getTime() - checkInTime;
-    const lockDurationMs = 60 * 60 * 1000;
-    
-    if (elapsedMs < lockDurationMs) {
-      checkoutLocked = true;
-      remainingMinutes = Math.ceil((lockDurationMs - elapsedMs) / (1000 * 60));
-    }
-  }
+  const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
+  const [supportData, setSupportData] = useState({ date: '', type: 'Missed Check In', reason: '' });
+
+  const isAdmin = user?.role === 'super' || user?.role === 'owner' || user?.role === 'hr';
 
   const loadData = async () => {
-    if (!user) return;
+    if (!uid) return;
     setLoading(true);
     try {
-      const isManagement = user.role === 'hr' || user.role === 'owner' || user.role === 'super';
-      const [empData, attData] = await Promise.all([
-        userService.getEmployees(),
-        attendanceService.getAttendance(isManagement ? undefined : user.uid)
+      const [attData, suppData] = await Promise.all([
+        attendanceService.getAttendance(isAdmin ? undefined : uid),
+        attendanceService.getSupportRequests(isAdmin ? undefined : uid)
       ]);
-      setEmployees(empData);
-      setRecords(attData);
+      setAttendance(attData);
+      setSupportReqs(suppData);
     } catch (err) {
-      console.error('Error loading attendance data:', err);
-      toast.error('Failed to sync attendance');
+      toast.error('Failed to load attendance');
     } finally {
       setLoading(false);
     }
@@ -65,283 +43,304 @@ export default function Attendance() {
 
   useEffect(() => {
     loadData();
-  }, [user?.uid, user?.role]);
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, [uid, isAdmin]);
 
-  const branches = ['All', ...new Set(employees.map(e => e.branch))];
-
-  const filteredRecords = records.filter(r => {
-    const emp = employees.find(e => e.uid === r.userId);
-    const matchesSearch = emp ? emp.name.toLowerCase().includes(search.toLowerCase()) : true;
-    const matchesBranch = filterBranch === 'All' || (emp ? emp.branch === filterBranch : true);
-    const matchesDate = !selectedDate || r.date === selectedDate;
-    return matchesSearch && matchesBranch && matchesDate;
-  }).sort((a, b) => {
-    const dateDiff = new Date(b.date).getTime() - new Date(a.date).getTime();
-    if (dateDiff !== 0) return dateDiff;
-    
-    const empA = employees.find(e => e.uid === a.userId);
-    const empB = employees.find(e => e.uid === b.userId);
-    if (!empA || !empB) return 0;
-    
-    const getScore = (p: UserProfile) => {
-      return p.sortOrder ?? 999;
-    };
-    return getScore(empA) - getScore(empB);
-  });
-
-  const getEmpName = (uid: string) => employees.find(e => e.uid === uid)?.name || 'Unknown';
-
-  const handleExport = () => {
-    if (filteredRecords.length === 0) {
-      toast.error('No records to export');
-      return;
-    }
-
-    const exportData = filteredRecords.map(record => {
-      const emp = employees.find(e => e.uid === record.userId);
-      const checkInDate = new Date(record.checkIn);
-      const checkOutDate = record.checkOut ? new Date(record.checkOut) : null;
+  const handleAction = async (action: 'checkIn' | 'startBreak' | 'endBreak' | 'checkOut') => {
+    if (!uid) return;
+    try {
+      if (action === 'checkIn') await attendanceService.checkIn(uid);
+      if (action === 'startBreak') await attendanceService.startBreak(uid);
+      if (action === 'endBreak') await attendanceService.endBreak(uid);
+      if (action === 'checkOut') await attendanceService.checkOut(uid);
       
-      let workHours = 'N/A';
-      if (checkOutDate) {
-        const diff = (checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60);
-        workHours = diff.toFixed(2);
-      }
-
-      return {
-        'Employee Name': emp?.name || 'Unknown',
-        'Branch': emp?.branch || 'N/A',
-        'Date': record.date,
-        'Check-In': checkInDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        'Check-Out': checkOutDate ? checkOutDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--',
-        'Is Late (After 09:10 AM)': record.isLate ? 'Yes' : 'No',
-        'Is Early Out (Before 05:30 PM)': record.isEarlyOut ? 'Yes' : 'No',
-        'Status': record.checkOut ? 'Completed' : 'Active',
-        'Work Hours': workHours
-      };
-    });
-
-    const ws = utils.json_to_sheet(exportData);
-    const wb = utils.book_new();
-    utils.book_append_sheet(wb, ws, 'Attendance Log');
-    
-    // Auto-size columns for better readability
-    const max_width = exportData.reduce((w, r) => Math.max(w, r['Employee Name'].length), 10);
-    ws['!cols'] = [{ wch: max_width + 5 }, { wch: 10 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 8 }, { wch: 12 }, { wch: 10 }, { wch: 12 }];
-
-    writeFile(wb, `HR_Pulse_Attendance_${new Date().toISOString().split('T')[0]}.xlsx`);
-    toast.success('Attendance log exported successfully!');
+      toast.success('Attendance logged successfully');
+      loadData();
+    } catch (e) {
+      toast.error('Failed to log attendance');
+    }
   };
+
+  const submitSupport = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!uid || !user || !supportData.date || !supportData.reason) return;
+
+    try {
+      await attendanceService.submitSupportRequest({
+        userId: uid,
+        userName: user.name,
+        date: supportData.date,
+        type: supportData.type as any,
+        reason: supportData.reason
+      });
+      setIsSupportModalOpen(false);
+      setSupportData({ date: '', type: 'Missed Check In', reason: '' });
+      toast.success('Support ticket submitted successfully!');
+      loadData();
+    } catch (e) {
+      toast.error('Failed to submit ticket');
+    }
+  };
+
+  const handleSupportAction = async (id: string, status: 'Approved' | 'Rejected') => {
+    try {
+      await attendanceService.updateSupportRequest(id, status);
+      toast.success(`Request ${status}`);
+      loadData();
+    } catch (e) {
+      toast.error('Failed to process request');
+    }
+  };
+
+  const formatTimeOnly = (isoString?: string) => {
+    if (!isoString) return '--:--';
+    return new Date(isoString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const getLocalToday = () => {
+    return new Intl.DateTimeFormat('en-CA', { 
+      timeZone: 'Asia/Colombo', 
+      year: 'numeric', month: '2-digit', day: '2-digit' 
+    }).format(new Date());
+  };
+
+  const todayStr = getLocalToday();
+  const myTodayRecord = attendance.find(r => r.userId === uid && r.date === todayStr);
+
+  const filteredAttendance = attendance.filter(r => 
+    r.userName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    r.date.includes(searchQuery)
+  );
+
+  if (loading) return <div className="p-8 text-center text-zinc-400">Loading attendance...</div>;
 
   return (
     <div className="space-y-8 pb-12">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black text-zinc-900">Attendance Log</h1>
-          <p className="text-zinc-500 font-medium mb-3">Track daily work hours and shifts</p>
-          <div className="inline-flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-bold bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-2">
-            <div className="flex items-center gap-1.5">
-              <Clock size={14} className="text-zinc-400" />
-              <span className="text-zinc-500">Standard Shift:</span>
-              <span className="text-zinc-900">08:30 AM - 05:30 PM</span>
-            </div>
-            <div className="w-px h-3 bg-zinc-300 hidden sm:block"></div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-red-500">Late In:</span>
-              <span className="text-zinc-900">After 09:10 AM</span>
-            </div>
-            <div className="w-px h-3 bg-zinc-300 hidden sm:block"></div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-amber-500">Early Out:</span>
-              <span className="text-zinc-900">Before 05:30 PM</span>
-            </div>
-          </div>
+          <h1 className="text-3xl font-black text-zinc-900">Attendance & Shifts</h1>
+          <p className="text-zinc-500 font-medium">Manage daily logs, breaks, and support requests</p>
         </div>
-        <div className="flex flex-col md:flex-row md:items-center gap-4">
-          {(user?.role === 'employee' || user?.role === 'hr') && (
-            <div className="flex gap-2">
-              <button 
-                onClick={async () => {
-                  try {
-                    await attendanceService.checkIn(user.uid);
-                    toast.success('Checked in!');
-                    loadData();
-                  } catch (err) {
-                    toast.error('Failed to check in or already checked in today');
-                  }
-                }}
-                className="bg-blue-600 text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 hover:bg-blue-700 transition-all shadow-lg shadow-blue-100"
-              >
-                <ArrowUpRight size={18} />
-                Check In
-              </button>
-              <button 
-                disabled={checkoutLocked}
-                onClick={async () => {
-                  if (checkoutLocked) return;
-                  try {
-                    await attendanceService.checkOut(user.uid);
-                    toast.success('Checked out!');
-                    loadData();
-                  } catch (err) {
-                    toast.error('No active shift found');
-                  }
-                }}
-                className={cn(
-                  "px-6 py-3 rounded-2xl font-bold flex items-center gap-2 transition-all shadow-lg",
-                  checkoutLocked 
-                    ? "bg-zinc-100 text-zinc-400 cursor-not-allowed shadow-none border border-zinc-200" 
-                    : "bg-zinc-900 text-white hover:bg-zinc-800"
-                )}
-              >
-                <ArrowDownRight size={18} />
-                {checkoutLocked ? `Locked (${remainingMinutes}m)` : 'Check Out'}
-              </button>
-            </div>
-          )}
-          <button 
-            onClick={handleExport}
-            className="bg-white border border-zinc-200 text-zinc-600 px-4 py-3 rounded-2xl font-bold flex items-center gap-2 hover:bg-zinc-50 transition-all"
-          >
-            <Download size={18} />
-            Export Logs
+        <div className="flex flex-col items-end">
+          <p className="text-4xl font-black tracking-tighter tabular-nums text-zinc-900">{currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+          <p className="text-xs font-bold text-blue-600 uppercase tracking-widest">{currentTime.toLocaleDateString([], { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+        </div>
+      </div>
+
+      {/* Action Bar (For Employees) */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {!myTodayRecord ? (
+          <button onClick={() => handleAction('checkIn')} className="col-span-1 md:col-span-2 bg-blue-600 text-white p-6 rounded-3xl font-black text-lg flex items-center justify-center gap-3 hover:bg-blue-700 transition-all shadow-xl shadow-blue-100">
+            <ArrowUpRight size={24} /> Log Check In
           </button>
-        </div>
-      </div>
-
-      {/* Stats Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white p-6 rounded-3xl border border-zinc-100 shadow-sm">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-700">
-              <UserCheck size={18} />
-            </div>
-            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Total Logs</span>
-          </div>
-          <p className="text-2xl font-black text-zinc-900">{filteredRecords.length}</p>
-        </div>
-        <div className="bg-white p-6 rounded-3xl border border-zinc-100 shadow-sm">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center text-red-600">
-              <Clock size={18} />
-            </div>
-            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Late Check-ins</span>
-          </div>
-          <p className="text-2xl font-black text-zinc-900">{filteredRecords.filter(r => r.isLate).length}</p>
-        </div>
-        <div className="bg-white p-6 rounded-3xl border border-zinc-100 shadow-sm">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center text-green-600">
-              <Timer size={18} />
-            </div>
-            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Completed Shifts</span>
-          </div>
-          <p className="text-2xl font-black text-zinc-900">{filteredRecords.filter(r => r.checkOut).length}</p>
-        </div>
-      </div>
-
-      {/* Filters (Only for Admin/HR) */}
-      {(user?.role !== 'employee') && (
-        <div className="bg-white p-4 rounded-4xl border border-zinc-100 shadow-sm flex flex-col md:flex-row gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
-            <input 
-              type="text" 
-              placeholder="Search by employee name..." 
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-zinc-50 border border-zinc-100 rounded-2xl text-sm focus:ring-2 focus:ring-blue-600 outline-none transition-all"
-            />
-          </div>
-          <select 
-            value={filterBranch}
-            onChange={(e) => setFilterBranch(e.target.value)}
-            className="px-4 py-3 bg-zinc-50 border border-zinc-100 rounded-2xl text-sm font-bold text-zinc-600 outline-none focus:ring-2 focus:ring-blue-600"
-          >
-            {branches.map(b => <option key={b} value={b}>{b}</option>)}
-          </select>
-          <div className="relative">
-            <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" size={18} />
-            <input 
-              type="date" 
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="pl-12 pr-4 py-3 bg-zinc-50 border border-zinc-100 rounded-2xl text-sm font-bold text-zinc-600 outline-none focus:ring-2 focus:ring-blue-600"
-            />
-            {selectedDate && (
-              <button 
-                onClick={() => setSelectedDate('')}
-                className="ml-2 text-xs font-bold text-zinc-400 hover:text-red-500 transition-colors"
-              >
-                Clear
+        ) : !myTodayRecord.checkOut ? (
+          <>
+            {!myTodayRecord.breakStart ? (
+              <button onClick={() => handleAction('startBreak')} className="col-span-1 bg-amber-500 text-white p-6 rounded-3xl font-black text-lg flex items-center justify-center gap-3 hover:bg-amber-600 transition-all shadow-xl shadow-amber-100">
+                <Coffee size={24} /> Start Break
               </button>
+            ) : !myTodayRecord.breakEnd ? (
+              <button onClick={() => handleAction('endBreak')} className="col-span-1 bg-green-500 text-white p-6 rounded-3xl font-black text-lg flex items-center justify-center gap-3 hover:bg-green-600 transition-all shadow-xl shadow-green-100">
+                <Coffee size={24} /> End Break
+              </button>
+            ) : (
+              <button disabled className="col-span-1 bg-zinc-100 text-zinc-400 p-6 rounded-3xl font-black text-lg flex items-center justify-center gap-3 cursor-not-allowed border border-zinc-200">
+                <Coffee size={24} /> Break Taken
+              </button>
+            )}
+            
+            <button onClick={() => handleAction('checkOut')} className="col-span-1 bg-zinc-900 text-white p-6 rounded-3xl font-black text-lg flex items-center justify-center gap-3 hover:bg-zinc-800 transition-all shadow-xl shadow-zinc-200">
+              <ArrowDownRight size={24} /> Check Out
+            </button>
+          </>
+        ) : (
+          <div className="col-span-1 md:col-span-2 bg-green-50 border border-green-100 text-green-700 p-6 rounded-3xl font-black text-lg flex items-center justify-center gap-3 cursor-default">
+            <CheckCircle2 size={24} /> Shift Completed
+          </div>
+        )}
+        
+        <button onClick={() => setIsSupportModalOpen(true)} className="col-span-1 md:col-span-2 bg-white border border-zinc-200 text-zinc-700 p-6 rounded-3xl font-black text-lg flex items-center justify-center gap-3 hover:bg-zinc-50 transition-all shadow-sm">
+          <LifeBuoy size={24} className="text-purple-500" /> Support Ticket
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Attendance Logs Table */}
+        <div className="lg:col-span-2 bg-white rounded-[2.5rem] border border-zinc-100 shadow-sm overflow-hidden flex flex-col min-h-[500px]">
+          <div className="p-6 border-b border-zinc-50 flex flex-col md:flex-row gap-4 justify-between items-center bg-zinc-50/50">
+            <h2 className="text-xl font-black text-zinc-900 flex items-center gap-2">
+              <Clock size={20} className="text-blue-500" /> Daily Logs
+            </h2>
+            <div className="relative w-full md:w-64">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400" size={16} />
+              <input
+                type="text"
+                placeholder="Search name or date..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 bg-white border border-zinc-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-600 outline-none transition-all font-medium"
+              />
+            </div>
+          </div>
+          
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-zinc-100 bg-zinc-50/30">
+                  <th className="px-6 py-4 text-[10px] font-black text-zinc-400 uppercase tracking-widest whitespace-nowrap">Date / Name</th>
+                  <th className="px-6 py-4 text-[10px] font-black text-zinc-400 uppercase tracking-widest text-center whitespace-nowrap">Check In</th>
+                  <th className="px-6 py-4 text-[10px] font-black text-zinc-400 uppercase tracking-widest text-center whitespace-nowrap">Break Time</th>
+                  <th className="px-6 py-4 text-[10px] font-black text-zinc-400 uppercase tracking-widest text-center whitespace-nowrap">Check Out</th>
+                  <th className="px-6 py-4 text-[10px] font-black text-zinc-400 uppercase tracking-widest text-center whitespace-nowrap">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-50">
+                {filteredAttendance.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-12 text-center text-zinc-400 font-medium">No attendance records found.</td>
+                  </tr>
+                ) : (
+                  filteredAttendance.map(log => (
+                    <tr key={log.id} className="hover:bg-zinc-50/50 transition-colors">
+                      <td className="px-6 py-4">
+                        <p className="text-sm font-bold text-zinc-900">{formatDate(log.date)}</p>
+                        {isAdmin && <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest mt-0.5">{log.userName}</p>}
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <div className="inline-flex flex-col items-center">
+                          <span className="text-sm font-black text-zinc-900">{formatTimeOnly(log.checkIn)}</span>
+                          {log.isLate && <span className="text-[9px] font-black text-red-500 uppercase tracking-widest mt-0.5">Late</span>}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        {log.breakStart ? (
+                          <div className="inline-flex flex-col items-center">
+                            <span className="text-sm font-bold text-zinc-600">{formatTimeOnly(log.breakStart)}</span>
+                            <span className="text-[10px] font-bold text-zinc-400">to {formatTimeOnly(log.breakEnd)}</span>
+                          </div>
+                        ) : (
+                          <span className="text-sm font-bold text-zinc-300">—</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        {log.checkOut ? (
+                          <div className="inline-flex flex-col items-center">
+                            <span className="text-sm font-black text-zinc-900">{formatTimeOnly(log.checkOut)}</span>
+                            {log.isEarlyOut && <span className="text-[9px] font-black text-amber-500 uppercase tracking-widest mt-0.5">Early</span>}
+                          </div>
+                        ) : (
+                          <span className="text-sm font-bold text-zinc-300">—</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <span className={cn(
+                          "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border",
+                          log.status === 'Working' ? "bg-blue-50 text-blue-700 border-blue-100" :
+                          log.status === 'On Break' ? "bg-amber-50 text-amber-700 border-amber-100" :
+                          "bg-zinc-100 text-zinc-700 border-zinc-200"
+                        )}>
+                          {log.status || (log.checkOut ? 'Completed' : 'Active')}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Support Tickets Column */}
+        <div className="lg:col-span-1 space-y-6">
+          <div className="bg-purple-900 rounded-[2.5rem] p-6 text-white shadow-xl relative overflow-hidden">
+            <div className="relative z-10 flex items-start gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center shrink-0">
+                <LifeBuoy size={24} className="text-purple-300" />
+              </div>
+              <div>
+                <h3 className="text-lg font-black text-white leading-tight">Support Tickets</h3>
+                <p className="text-sm text-purple-200 mt-1">Need to fix a log? Submit a request to HR for approval.</p>
+              </div>
+            </div>
+            <div className="absolute top-[-50%] right-[-20%] w-48 h-48 bg-purple-500/30 rounded-full blur-3xl"></div>
+          </div>
+
+          <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
+            {supportReqs.length === 0 ? (
+              <div className="p-6 text-center border-2 border-dashed border-zinc-200 rounded-[2rem] bg-zinc-50/50">
+                <p className="text-sm font-bold text-zinc-500">No support tickets.</p>
+              </div>
+            ) : (
+              supportReqs.map(req => (
+                <div key={req.id} className="bg-white p-5 rounded-[2rem] border border-zinc-100 shadow-sm">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className={cn(
+                      "px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-widest",
+                      req.status === 'Approved' ? "bg-green-100 text-green-700" :
+                      req.status === 'Rejected' ? "bg-red-100 text-red-700" :
+                      "bg-amber-100 text-amber-700"
+                    )}>
+                      {req.status}
+                    </span>
+                    <span className="text-[10px] font-bold text-zinc-400">{formatDate(req.date)}</span>
+                  </div>
+                  <h4 className="text-sm font-black text-zinc-900 mb-1">{req.type}</h4>
+                  <p className="text-xs text-zinc-500 mb-4">{req.reason}</p>
+                  
+                  {isAdmin && req.status === 'Pending' && (
+                    <div className="flex gap-2 pt-4 border-t border-zinc-100">
+                      <button onClick={() => handleSupportAction(req.id, 'Approved')} className="flex-1 py-2 bg-green-50 hover:bg-green-100 text-green-700 rounded-xl text-xs font-bold transition-colors">Approve</button>
+                      <button onClick={() => handleSupportAction(req.id, 'Rejected')} className="flex-1 py-2 bg-red-50 hover:bg-red-100 text-red-700 rounded-xl text-xs font-bold transition-colors">Reject</button>
+                    </div>
+                  )}
+                  {isAdmin && <p className="text-[10px] font-bold text-zinc-400 mt-2 uppercase tracking-widest">By: {req.userName}</p>}
+                </div>
+              ))
             )}
           </div>
         </div>
-      )}
-
-      {/* Attendance Table */}
-      <div className="bg-white rounded-4xl border border-zinc-100 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-zinc-50/50">
-                <th className="px-8 py-4 text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Employee</th>
-                <th className="px-8 py-4 text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Date</th>
-                <th className="px-8 py-4 text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Check In</th>
-                <th className="px-8 py-4 text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Check Out</th>
-                <th className="px-8 py-4 text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-50">
-              {filteredRecords.map((record) => (
-                <tr key={record.id} className="hover:bg-zinc-50/30 transition-colors">
-                  <td className="px-8 py-5">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-zinc-100 flex items-center justify-center text-zinc-500 font-black text-xs">
-                        {getEmpName(record.userId).charAt(0)}
-                      </div>
-                      <span className="font-bold text-zinc-900">{getEmpName(record.userId)}</span>
-                    </div>
-                  </td>
-                  <td className="px-8 py-5">
-                    <div className="flex items-center gap-2 text-sm font-bold text-zinc-700">
-                      <Calendar size={14} className="text-zinc-400" />
-                      {formatDate(record.date)}
-                    </div>
-                  </td>
-                  <td className="px-8 py-5">
-                    <div className="flex items-center gap-2">
-                      <ArrowUpRight size={14} className={record.isLate ? "text-red-500" : "text-green-500"} />
-                      <span className={cn("text-sm font-black", record.isLate ? "text-red-600" : "text-zinc-900")}>
-                        {new Date(record.checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </span>
-                      {record.isLate && <span className="text-[8px] font-black uppercase bg-red-50 text-red-600 px-1.5 py-0.5 rounded">Late</span>}
-                    </div>
-                  </td>
-                  <td className="px-8 py-5">
-                    <div className="flex items-center gap-2">
-                      <ArrowDownRight size={14} className={record.isEarlyOut ? "text-amber-500" : "text-blue-500"} />
-                      <span className="text-sm font-black text-zinc-900">
-                        {record.checkOut ? new Date(record.checkOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
-                      </span>
-                      {record.isEarlyOut && <span className="text-[8px] font-black uppercase bg-amber-50 text-amber-600 px-1.5 py-0.5 rounded">Early</span>}
-                    </div>
-                  </td>
-                  <td className="px-8 py-5">
-                    <div className={cn(
-                      "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border",
-                      record.checkOut ? "bg-green-50 text-green-700 border-green-100" : "bg-amber-50 text-amber-700 border-amber-100"
-                    )}>
-                      {record.checkOut ? 'Completed' : 'Active'}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
       </div>
+
+      {/* Support Modal */}
+      <AnimatePresence>
+        {isSupportModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsSupportModalOpen(false)} className="absolute inset-0 bg-zinc-900/60 backdrop-blur-sm" />
+            <motion.div initial={{ scale: 0.95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 20 }} className="relative w-full max-w-lg bg-white rounded-4xl shadow-2xl border border-zinc-100 overflow-hidden">
+              <div className="p-6 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/50">
+                <h2 className="text-xl font-black text-zinc-900 flex items-center gap-2">
+                  <LifeBuoy size={20} className="text-purple-600" />
+                  New Support Ticket
+                </h2>
+                <button onClick={() => setIsSupportModalOpen(false)} className="p-2 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 rounded-xl">✕</button>
+              </div>
+              <form onSubmit={submitSupport} className="p-8 space-y-6">
+                <div>
+                  <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-2 ml-1">Issue Date</label>
+                  <input type="date" required value={supportData.date} onChange={e => setSupportData({...supportData, date: e.target.value})} className="w-full px-5 py-4 bg-zinc-50 border border-zinc-100 rounded-2xl text-sm focus:ring-2 focus:ring-purple-600 outline-none font-bold" />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-2 ml-1">Issue Type</label>
+                  <select value={supportData.type} onChange={e => setSupportData({...supportData, type: e.target.value})} className="w-full px-5 py-4 bg-zinc-50 border border-zinc-100 rounded-2xl text-sm focus:ring-2 focus:ring-purple-600 outline-none font-bold appearance-none">
+                    <option value="Missed Check In">Missed Check In</option>
+                    <option value="Missed Check Out">Missed Check Out</option>
+                    <option value="System Error">System Error</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-2 ml-1">Reason / Description</label>
+                  <textarea required rows={3} value={supportData.reason} onChange={e => setSupportData({...supportData, reason: e.target.value})} placeholder="Please explain what happened..." className="w-full px-5 py-4 bg-zinc-50 border border-zinc-100 rounded-2xl text-sm focus:ring-2 focus:ring-purple-600 outline-none font-medium resize-none" />
+                </div>
+                <button type="submit" className="w-full py-4 rounded-2xl font-black text-white bg-purple-600 hover:bg-purple-700 transition-all shadow-xl shadow-purple-100">
+                  Submit Ticket
+                </button>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

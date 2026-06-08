@@ -41,7 +41,7 @@ export default function Login() {
           <div className="relative z-10">
             <div className="flex items-center gap-3 mb-12">
               <Logo size="lg" className="mb-4" />
-              <h1 className="text-2xl font-black tracking-tight">HR PULSE</h1>
+              <h1 className="text-2xl font-black tracking-tight">VORKCA HR</h1>
             </div>
             <h2 className="text-5xl font-black leading-tight mb-6">
               Manage your <br /> workforce with <br /> precision.
@@ -66,7 +66,7 @@ export default function Login() {
         <div className="p-8 lg:p-16 flex flex-col justify-center">
           <div className="mb-10">
             <h3 className="text-3xl font-black text-zinc-900 mb-2">Sign In</h3>
-            <p className="text-zinc-500 font-medium">Enter your credentials to access the HR Pulse dashboard.</p>
+            <p className="text-zinc-500 font-medium">Enter your credentials to access the VORKCA HR dashboard.</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -116,11 +116,11 @@ export default function Login() {
           <div className="mt-8 p-4 bg-zinc-50 rounded-2xl border border-zinc-100">
             <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-2">Login Credentials</p>
             <div className="grid grid-cols-1 gap-2 text-[10px] font-bold text-zinc-400">
-              <div><strong className="text-zinc-200">Super Admin:</strong> superadmin@hrpulse.com / superadmin1234</div>
+              <div><strong className="text-zinc-200">Super Admin:</strong> superadmin@gmail.com / superadmin1234</div>
               <div><strong className="text-zinc-200">Dinusha:</strong> dinushapushparajah@gmail.com / dinusha123</div>
               <div><strong className="text-zinc-200">Janani:</strong> jananisaijanani9@gmail.com / janani123</div>
               <div><strong className="text-zinc-200">Nisal:</strong> nisalsayuranga0710@gmail.com / nisal123</div>
-              <div><strong className="text-zinc-200">Jayaminda:</strong> msjayaminda@gmail.com / jayaminda123</div>
+              <div><strong className="text-zinc-200">Jaiminda:</strong> msjaiminda@gmail.com / jaiminda123</div>
             </div>
           </div>
 

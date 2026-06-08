@@ -230,14 +230,15 @@ export default function Leaves() {
 
   const canApprove = (req: LeaveRequest) => {
     if (!user) return false;
-    const myRole = user.role;
-    const theirRole = req.userRole;
+    
+    // Super Admin can approve anyone
+    if (user.name === 'Super Admin') return true;
 
-    // Management (Owner, HR, Super) can approve Employees
-    if ((myRole === 'owner' || myRole === 'hr' || myRole === 'super') && theirRole === 'employee') return true;
+    // Owners can approve anyone
+    if (user.role === 'owner') return true;
 
-    // Owners can approve HR and Super as well
-    if (myRole === 'owner' && (theirRole === 'hr' || theirRole === 'super')) return true;
+    // Managers (HR, Super like Dinusha) can only approve standard employees
+    if ((user.role === 'hr' || user.role === 'super') && req.userRole === 'employee') return true;
 
     return false;
   };
