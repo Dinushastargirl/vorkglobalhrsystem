@@ -1,7 +1,6 @@
 import express from "express";
 import { createServer as createViteServer } from "vite";
 import path from "path";
-import fs from "fs";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 
@@ -17,24 +16,6 @@ async function startServer() {
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok", message: "HR Pulse API is running" });
   });
-
-  const getJsonFile = (filename: string) => {
-    const filepath = path.join(process.cwd(), filename);
-    if (!fs.existsSync(filepath)) return [];
-    try { return JSON.parse(fs.readFileSync(filepath, 'utf8')); } catch { return []; }
-  };
-  const saveJsonFile = (filename: string, data: any) => {
-    fs.writeFileSync(path.join(process.cwd(), filename), JSON.stringify(data, null, 2));
-  };
-
-  app.get("/api/tasks", (req, res) => res.json(getJsonFile('tasks.json')));
-  app.post("/api/tasks", (req, res) => { saveJsonFile('tasks.json', req.body); res.json({ success: true }); });
-
-  app.get("/api/qualifications", (req, res) => res.json(getJsonFile('qualifications.json')));
-  app.post("/api/qualifications", (req, res) => { saveJsonFile('qualifications.json', req.body); res.json({ success: true }); });
-
-  app.get("/api/employees", (req, res) => res.json(getJsonFile('employees.json')));
-  app.post("/api/employees", (req, res) => { saveJsonFile('employees.json', req.body); res.json({ success: true }); });
 
   // Mock Auth for demonstration of JWT requirement
   // In a real app, we'd use Firebase Auth tokens, but the user asked for JWT/Bcrypt
