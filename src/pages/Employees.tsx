@@ -57,7 +57,8 @@ export default function Employees() {
                          emp.email.toLowerCase().includes(search.toLowerCase()) ||
                          emp.username.toLowerCase().includes(search.toLowerCase());
     const matchesBranch = filterBranch === 'All' || emp.branch === filterBranch;
-    return matchesSearch && matchesBranch;
+    const isNotSuperAdmin = emp.name !== 'Super Admin';
+    return matchesSearch && matchesBranch && isNotSuperAdmin;
   });
 
   const totalPages = Math.ceil(filteredEmployees.length / itemsPerPage);
