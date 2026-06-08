@@ -15,11 +15,10 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const VALID_CREDENTIALS: Record<string, { password: string; email: string }> = {
-  'superadmin': { password: 'superadmin1234', email: 'superadmin@hrpulse.com' },
-  'superadmin@hrpulse.com': { password: 'superadmin1234', email: 'superadmin@hrpulse.com' },
-  'dinushapushparajah@gmail.com': { password: 'dinusha123', email: 'dinushapushparajah@gmail.com' },
-  'dinushushapushparajah@gmail.com': { password: 'dinusha123', email: 'dinushapushparajah@gmail.com' },
-  'dinusha': { password: 'dinusha123', email: 'dinushapushparajah@gmail.com' },
+  'superadmin': { password: 'superadmin1234', email: 'superadmin@gmail.com' },
+  'superadmin@gmail.com': { password: 'superadmin1234', email: 'superadmin@gmail.com' },
+  'dinushushapushparajah@gmail.com': { password: 'dinusha123', email: 'dinushushapushparajah@gmail.com' },
+  'dinusha': { password: 'dinusha123', email: 'dinushushapushparajah@gmail.com' },
   'jananisaijanani9@gmail.com': { password: 'janani123', email: 'jananisaijanani9@gmail.com' },
   'janani': { password: 'janani123', email: 'jananisaijanani9@gmail.com' },
   'nisalsayuranga0710@gmail.com': { password: 'nisal123', email: 'nisalsayuranga0710@gmail.com' },

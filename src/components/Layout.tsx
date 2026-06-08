@@ -43,8 +43,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   const getGreeting = () => {
     const hour = currentTime.getHours();
-    if (hour < 12) return { text: 'Good Morning', icon: <Sun className="text-orange-500" size={24} /> };
-    if (hour < 18) return { text: 'Good Afternoon', icon: <Sun className="text-orange-400" size={24} /> };
+    if (hour < 12) return { text: 'Good Morning', icon: <Sun className="text-blue-600" size={24} /> };
+    if (hour < 18) return { text: 'Good Afternoon', icon: <Sun className="text-blue-400" size={24} /> };
     return { text: 'Good Evening', icon: <Moon className="text-indigo-400" size={24} /> };
   };
 
@@ -52,7 +52,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="flex flex-col items-center gap-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
           <p className="text-zinc-500 font-medium">Loading HR...</p>
         </div>
       </div>
@@ -83,7 +83,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       {/* Mobile Header */}
       <div className="md:hidden bg-white border-b border-zinc-200 p-4 flex items-center justify-between sticky top-0 z-50">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center text-white font-bold">H</div>
+          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold">H</div>
           <span className="text-lg font-bold tracking-tight text-zinc-900">HR</span>
         </div>
         <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="p-2 text-zinc-600 hover:bg-zinc-100 rounded-lg">
@@ -98,7 +98,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       )}>
         <div className="h-full flex flex-col">
           <div className="p-6 hidden md:flex items-center gap-3">
-            <div className="w-10 h-10 bg-orange-500 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-orange-200">H</div>
+            <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-blue-200">H</div>
             <span className="text-xl font-bold tracking-tight text-zinc-900">HR</span>
           </div>
 
@@ -111,8 +111,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 className={cn(
                   "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200",
                   location.pathname === item.path
-                    ? "bg-orange-500 text-white shadow-lg shadow-orange-100"
-                    : "text-zinc-500 hover:bg-orange-50 hover:text-orange-600"
+                    ? "bg-blue-600 text-white shadow-lg shadow-blue-100"
+                    : "text-zinc-500 hover:bg-blue-50 hover:text-blue-700"
                 )}
               >
                 <item.icon size={18} />
@@ -133,7 +133,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-bold text-zinc-900 truncate">{user.name}</p>
-                  <p className="text-[10px] font-bold text-orange-600 uppercase tracking-wider">{user.role}</p>
+                  <p className="text-[10px] font-bold text-blue-700 uppercase tracking-wider">{user.role}</p>
                 </div>
               </div>
             </div>
@@ -153,7 +153,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         {/* Top Bar */}
         <header className="hidden md:flex bg-white/80 backdrop-blur-md border-b border-zinc-200 p-4 px-8 items-center justify-between sticky top-0 z-30">
           <div className="flex items-center gap-4">
-            <div className="p-2 bg-orange-50 rounded-xl">
+            <div className="p-2 bg-blue-50 rounded-xl">
               {greeting.icon}
             </div>
             <div>

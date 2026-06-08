@@ -132,7 +132,7 @@ export default function Advances() {
         {(user?.role === 'employee' || user?.role === 'hr') && (
           <button 
             onClick={() => setIsModalOpen(true)}
-            className="bg-orange-500 text-white px-8 py-4 rounded-2xl font-black flex items-center gap-2 hover:bg-orange-600 transition-all shadow-xl shadow-orange-100"
+            className="bg-blue-600 text-white px-8 py-4 rounded-2xl font-black flex items-center gap-2 hover:bg-blue-700 transition-all shadow-xl shadow-blue-100"
           >
             <Plus size={20} />
             Request Advance
@@ -146,12 +146,12 @@ export default function Advances() {
           <div className="bg-white p-6 rounded-3xl border border-zinc-100 shadow-sm flex items-center justify-between">
             <div>
               <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1">Total Active Advances</p>
-              <p className="text-2xl font-black text-orange-600">
+              <p className="text-2xl font-black text-blue-700">
                 LKR {(user?.advances || 0).toLocaleString()}
                 <span className="text-[10px] block opacity-60">To be deducted from your next payroll</span>
               </p>
             </div>
-            <div className="w-12 h-12 bg-orange-50 rounded-2xl flex items-center justify-center text-orange-500">
+            <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600">
               <CreditCard size={24} />
             </div>
           </div>
@@ -177,7 +177,7 @@ export default function Advances() {
             { label: 'Pending Requests', value: advances.filter(a => a.status === 'Pending').length, icon: Clock, color: 'text-amber-600', bg: 'bg-amber-100' },
             { label: 'Total Requests', value: advances.length, icon: Calendar, color: 'text-zinc-600', bg: 'bg-zinc-100' },
             { label: 'Approved Today', value: advances.filter(a => a.status === 'Approved').length, icon: CheckCircle2, color: 'text-green-600', bg: 'bg-green-100' },
-            { label: 'Total LKR Approved', value: `LKR ${advances.filter(a => a.status === 'Approved').reduce((s, a) => s + (a.amount || 0), 0).toLocaleString()}`, icon: Coins, color: 'text-orange-600', bg: 'bg-orange-50' },
+            { label: 'Total LKR Approved', value: `LKR ${advances.filter(a => a.status === 'Approved').reduce((s, a) => s + (a.amount || 0), 0).toLocaleString()}`, icon: Coins, color: 'text-blue-700', bg: 'bg-blue-50' },
           ].map((stat) => (
             <div key={stat.label} className="bg-white p-6 rounded-3xl border border-zinc-100 shadow-sm">
               <div className="flex items-center gap-3 mb-2">
@@ -226,7 +226,7 @@ export default function Advances() {
       <div className="space-y-4">
         {loading ? (
           <div className="text-center py-12">
-            <div className="w-10 h-10 border-4 border-zinc-200 border-t-orange-500 rounded-full animate-spin mx-auto mb-4" />
+            <div className="w-10 h-10 border-4 border-zinc-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4" />
             <p className="text-sm font-bold text-zinc-500">Syncing advance requests...</p>
           </div>
         ) : filteredAdvances.length === 0 ? (
@@ -261,7 +261,7 @@ export default function Advances() {
 
                 <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center text-orange-600">
+                    <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-700">
                       <Coins size={18} />
                     </div>
                     <div>
@@ -388,7 +388,7 @@ export default function Advances() {
                     placeholder="Enter amount (e.g. 15000)"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
-                    className="w-full px-5 py-4 rounded-2xl bg-zinc-50 border border-zinc-100 focus:ring-2 focus:ring-orange-500 focus:bg-white outline-none transition-all font-bold text-zinc-800"
+                    className="w-full px-5 py-4 rounded-2xl bg-zinc-50 border border-zinc-100 focus:ring-2 focus:ring-blue-600 focus:bg-white outline-none transition-all font-bold text-zinc-800"
                   />
                 </div>
                 <div>
@@ -398,7 +398,7 @@ export default function Advances() {
                     rows={4}
                     value={reason}
                     onChange={(e) => setReason(e.target.value)}
-                    className="w-full px-5 py-4 rounded-2xl bg-zinc-50 border border-zinc-100 focus:ring-2 focus:ring-orange-500 focus:bg-white outline-none transition-all resize-none font-medium text-zinc-800"
+                    className="w-full px-5 py-4 rounded-2xl bg-zinc-50 border border-zinc-100 focus:ring-2 focus:ring-blue-600 focus:bg-white outline-none transition-all resize-none font-medium text-zinc-800"
                     placeholder="Briefly explain the reason for the advance request..."
                   />
                 </div>
@@ -406,7 +406,7 @@ export default function Advances() {
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="flex-1 bg-orange-500 text-white px-6 py-4 rounded-2xl font-black hover:bg-orange-600 transition-all shadow-xl shadow-orange-100 disabled:opacity-50"
+                    className="flex-1 bg-blue-600 text-white px-6 py-4 rounded-2xl font-black hover:bg-blue-700 transition-all shadow-xl shadow-blue-100 disabled:opacity-50"
                   >
                     {submitting ? 'Submitting...' : 'Submit Request'}
                   </button>

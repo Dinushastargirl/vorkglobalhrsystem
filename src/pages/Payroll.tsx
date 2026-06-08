@@ -360,7 +360,7 @@ export default function Payroll() {
                 <select 
                   value={genMonth}
                   onChange={(e) => setGenMonth(Number(e.target.value))}
-                  className="w-full px-4 py-3 bg-zinc-50 border border-zinc-100 rounded-2xl text-sm font-bold text-zinc-700 outline-none focus:ring-2 focus:ring-orange-500 transition-all"
+                  className="w-full px-4 py-3 bg-zinc-50 border border-zinc-100 rounded-2xl text-sm font-bold text-zinc-700 outline-none focus:ring-2 focus:ring-blue-600 transition-all"
                 >
                   {months.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
                 </select>
@@ -370,7 +370,7 @@ export default function Payroll() {
                 <select 
                   value={genYear}
                   onChange={(e) => setGenYear(Number(e.target.value))}
-                  className="w-full px-4 py-3 bg-zinc-50 border border-zinc-100 rounded-2xl text-sm font-bold text-zinc-700 outline-none focus:ring-2 focus:ring-orange-500 transition-all"
+                  className="w-full px-4 py-3 bg-zinc-50 border border-zinc-100 rounded-2xl text-sm font-bold text-zinc-700 outline-none focus:ring-2 focus:ring-blue-600 transition-all"
                 >
                   {[2024, 2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
                 </select>
@@ -416,7 +416,7 @@ export default function Payroll() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-white p-6 rounded-3xl border border-zinc-100 shadow-sm">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center text-orange-600">
+            <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-700">
               <DollarSign size={18} />
             </div>
             <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Total Payout</span>
@@ -452,7 +452,7 @@ export default function Payroll() {
             placeholder="Search by employee name..." 
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 bg-zinc-50 border border-zinc-100 rounded-2xl text-sm focus:ring-2 focus:ring-orange-500 outline-none transition-all"
+            className="w-full pl-12 pr-4 py-3 bg-zinc-50 border border-zinc-100 rounded-2xl text-sm focus:ring-2 focus:ring-blue-600 outline-none transition-all"
           />
         </div>
         <div className="flex flex-wrap gap-3 w-full lg:w-auto justify-end">
@@ -469,14 +469,14 @@ export default function Payroll() {
           <select 
             value={filterMonth}
             onChange={(e) => setFilterMonth(Number(e.target.value))}
-            className="px-4 py-3 bg-zinc-50 border border-zinc-100 rounded-2xl text-sm font-bold text-zinc-600 outline-none focus:ring-2 focus:ring-orange-500"
+            className="px-4 py-3 bg-zinc-50 border border-zinc-100 rounded-2xl text-sm font-bold text-zinc-600 outline-none focus:ring-2 focus:ring-blue-600"
           >
             {months.map((m, i) => <option key={m} value={i}>{m}</option>)}
           </select>
           <select 
             value={filterYear}
             onChange={(e) => setFilterYear(Number(e.target.value))}
-            className="px-4 py-3 bg-zinc-50 border border-zinc-100 rounded-2xl text-sm font-bold text-zinc-600 outline-none focus:ring-2 focus:ring-orange-500"
+            className="px-4 py-3 bg-zinc-50 border border-zinc-100 rounded-2xl text-sm font-bold text-zinc-600 outline-none focus:ring-2 focus:ring-blue-600"
           >
             {[2024, 2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
           </select>
@@ -498,7 +498,7 @@ export default function Payroll() {
                 <th className="px-8 py-4 text-[10px] font-bold text-zinc-400 uppercase tracking-widest text-right">Intensive</th>
                 <th className="px-8 py-4 text-[10px] font-bold text-zinc-400 uppercase tracking-widest text-right">Travelling</th>
                 <th className="px-8 py-4 text-[10px] font-bold text-zinc-400 uppercase tracking-widest text-right text-green-600">Extra Days</th>
-                <th className="px-8 py-4 text-[10px] font-bold text-zinc-400 uppercase tracking-widest text-right text-orange-500">Net Salary</th>
+                <th className="px-8 py-4 text-[10px] font-bold text-zinc-400 uppercase tracking-widest text-right text-blue-600">Net Salary</th>
                 <th className="px-8 py-4 text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Status</th>
               </tr>
             </thead>
@@ -541,7 +541,7 @@ export default function Payroll() {
                     {(p.extraDays || 0).toLocaleString()}
                   </td>
                   <td className="px-8 py-5 text-right">
-                    <span className="text-base font-black text-orange-600">LKR {(p.netSalary || 0).toLocaleString()}</span>
+                    <span className="text-base font-black text-blue-700">LKR {(p.netSalary || 0).toLocaleString()}</span>
                   </td>
                   <td className="px-8 py-5">
                     <div className={cn(

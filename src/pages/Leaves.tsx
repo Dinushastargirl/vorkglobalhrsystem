@@ -264,7 +264,7 @@ export default function Leaves() {
         {(user?.role === 'employee' || user?.role === 'hr') && (
           <button
             onClick={() => setIsModalOpen(true)}
-            className="bg-orange-500 text-white px-8 py-4 rounded-2xl font-black flex items-center gap-2 hover:bg-orange-600 transition-all shadow-xl shadow-orange-100"
+            className="bg-blue-600 text-white px-8 py-4 rounded-2xl font-black flex items-center gap-2 hover:bg-blue-700 transition-all shadow-xl shadow-blue-100"
           >
             <Plus size={20} />
             Apply for Leave
@@ -277,7 +277,7 @@ export default function Leaves() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="bg-white p-6 rounded-3xl border border-zinc-100 shadow-sm">
             <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1">Total Leave Balance</p>
-            <p className="text-2xl font-black text-orange-600">
+            <p className="text-2xl font-black text-blue-700">
               {formatBalance(remainingDays)}
               <span className="text-[10px] block opacity-60">Out of {user.leaveQuotas?.annual || 14} total annual days</span>
             </p>
@@ -375,7 +375,7 @@ export default function Leaves() {
 
               <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center text-orange-600">
+                  <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-700">
                     <Calendar size={18} />
                   </div>
                   <div>
@@ -416,7 +416,7 @@ export default function Leaves() {
                       href={req.imageUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="p-2 bg-zinc-50 hover:bg-zinc-100 rounded-xl text-zinc-400 hover:text-orange-500 transition-all"
+                      className="p-2 bg-zinc-50 hover:bg-zinc-100 rounded-xl text-zinc-400 hover:text-blue-600 transition-all"
                       title="View Attachment"
                     >
                       <Camera size={20} />
@@ -517,7 +517,7 @@ export default function Leaves() {
                   <select
                     value={leaveType}
                     onChange={(e) => setLeaveType(e.target.value as any)}
-                    className="w-full px-5 py-4 rounded-2xl bg-zinc-50 border border-zinc-100 focus:ring-2 focus:ring-orange-500 focus:bg-white outline-none transition-all font-bold text-zinc-800"
+                    className="w-full px-5 py-4 rounded-2xl bg-zinc-50 border border-zinc-100 focus:ring-2 focus:ring-blue-600 focus:bg-white outline-none transition-all font-bold text-zinc-800"
                   >
                     <option value="Annual">Annual Leave</option>
                     <option value="Sick">Sick Leave</option>
@@ -535,7 +535,7 @@ export default function Leaves() {
                       required
                       value={startDate}
                       onChange={(e) => setStartDate(e.target.value)}
-                      className="w-full px-5 py-4 rounded-2xl bg-zinc-50 border border-zinc-100 focus:ring-2 focus:ring-orange-500 focus:bg-white outline-none transition-all font-bold text-zinc-800"
+                      className="w-full px-5 py-4 rounded-2xl bg-zinc-50 border border-zinc-100 focus:ring-2 focus:ring-blue-600 focus:bg-white outline-none transition-all font-bold text-zinc-800"
                     />
                   </div>
                   {leaveType.toLowerCase() !== 'short' ? (
@@ -546,7 +546,7 @@ export default function Leaves() {
                         required
                         value={endDate}
                         onChange={(e) => setEndDate(e.target.value)}
-                        className="w-full px-5 py-4 rounded-2xl bg-zinc-50 border border-zinc-100 focus:ring-2 focus:ring-orange-500 focus:bg-white outline-none transition-all font-bold text-zinc-800"
+                        className="w-full px-5 py-4 rounded-2xl bg-zinc-50 border border-zinc-100 focus:ring-2 focus:ring-blue-600 focus:bg-white outline-none transition-all font-bold text-zinc-800"
                       />
                     </div>
                   ) : (
@@ -558,7 +558,7 @@ export default function Leaves() {
                           required
                           value={startTime}
                           onChange={(e) => setStartTime(e.target.value)}
-                          className="w-full px-3 py-4 rounded-2xl bg-zinc-50 border border-zinc-100 focus:ring-2 focus:ring-orange-500 focus:bg-white outline-none transition-all font-bold text-zinc-800"
+                          className="w-full px-3 py-4 rounded-2xl bg-zinc-50 border border-zinc-100 focus:ring-2 focus:ring-blue-600 focus:bg-white outline-none transition-all font-bold text-zinc-800"
                         />
                       </div>
                       <div>
@@ -568,7 +568,7 @@ export default function Leaves() {
                           required
                           value={endTime}
                           onChange={(e) => setEndTime(e.target.value)}
-                          className="w-full px-3 py-4 rounded-2xl bg-zinc-50 border border-zinc-100 focus:ring-2 focus:ring-orange-500 focus:bg-white outline-none transition-all font-bold text-zinc-800"
+                          className="w-full px-3 py-4 rounded-2xl bg-zinc-50 border border-zinc-100 focus:ring-2 focus:ring-blue-600 focus:bg-white outline-none transition-all font-bold text-zinc-800"
                         />
                       </div>
                     </div>
@@ -581,16 +581,16 @@ export default function Leaves() {
                     rows={3}
                     value={reason}
                     onChange={(e) => setReason(e.target.value)}
-                    className="w-full px-5 py-4 rounded-2xl bg-zinc-50 border border-zinc-100 focus:ring-2 focus:ring-orange-500 focus:bg-white outline-none transition-all resize-none font-medium"
+                    className="w-full px-5 py-4 rounded-2xl bg-zinc-50 border border-zinc-100 focus:ring-2 focus:ring-blue-600 focus:bg-white outline-none transition-all resize-none font-medium"
                     placeholder="Briefly describe your reason..."
                   />
                 </div>
                 <div>
                   <label className="block text-xs font-black text-zinc-500 uppercase tracking-widest mb-2 ml-1">Attachment (Optional)</label>
-                  <label className="flex items-center justify-center gap-2 w-full px-5 py-4 rounded-2xl bg-zinc-50 border border-dashed border-zinc-200 hover:border-orange-300 hover:bg-orange-50 transition-all cursor-pointer group">
+                  <label className="flex items-center justify-center gap-2 w-full px-5 py-4 rounded-2xl bg-zinc-50 border border-dashed border-zinc-200 hover:border-blue-300 hover:bg-blue-50 transition-all cursor-pointer group">
                     <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
-                    <Camera size={20} className="text-zinc-400 group-hover:text-orange-500" />
-                    <span className="text-sm font-bold text-zinc-500 group-hover:text-orange-600">
+                    <Camera size={20} className="text-zinc-400 group-hover:text-blue-600" />
+                    <span className="text-sm font-bold text-zinc-500 group-hover:text-blue-700">
                       {leaveImage ? 'Image Attached ✅' : 'Upload Medical/Document'}
                     </span>
                   </label>
@@ -599,7 +599,7 @@ export default function Leaves() {
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="flex-1 bg-orange-500 text-white px-6 py-4 rounded-2xl font-black hover:bg-orange-600 transition-all shadow-xl shadow-orange-100 disabled:opacity-50"
+                    className="flex-1 bg-blue-600 text-white px-6 py-4 rounded-2xl font-black hover:bg-blue-700 transition-all shadow-xl shadow-blue-100 disabled:opacity-50"
                   >
                     {submitting ? 'Submitting...' : 'Confirm Request'}
                   </button>
@@ -644,7 +644,7 @@ export default function Leaves() {
                   </button>
                   <button
                     onClick={() => proceedSubmit(pendingSubmitData)}
-                    className="flex-1 px-6 py-4 rounded-2xl font-bold text-white bg-orange-500 hover:bg-orange-600 transition-all shadow-lg shadow-orange-100"
+                    className="flex-1 px-6 py-4 rounded-2xl font-bold text-white bg-blue-600 hover:bg-blue-700 transition-all shadow-lg shadow-blue-100"
                   >
                     Yes, Continue
                   </button>

@@ -13,6 +13,9 @@ import {
   User,
   TrendingUp,
   Briefcase,
+  ListTodo,
+  Award,
+  Trophy,
   X,
   Coins
 } from 'lucide-react';
@@ -38,6 +41,9 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     { name: 'Manage Payroll', icon: Settings, path: '/manage-payroll', roles: ['super', 'hr'] },
     { name: 'Performance', icon: TrendingUp, path: '/performance', roles: ['super', 'owner', 'hr', 'employee'] },
     { name: 'Calendar', icon: Calendar, path: '/calendar', roles: ['super', 'owner', 'hr', 'employee'] },
+    { name: 'Tasks', icon: ListTodo, path: '/tasks', roles: ['super', 'owner', 'hr', 'employee'] },
+    { name: 'Qualifications', icon: Award, path: '/qualifications', roles: ['super', 'owner', 'hr', 'employee'] },
+    { name: 'Leaderboard', icon: Trophy, path: '/leaderboard', roles: ['super', 'owner', 'hr', 'employee'] },
     { name: 'Profile', icon: User, path: '/profile', roles: ['super', 'owner', 'hr', 'employee'] },
   ];
 
@@ -81,7 +87,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               className={({ isActive }) => cn(
                 "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all duration-200",
                 isActive 
-                  ? "bg-orange-50 text-orange-600 shadow-sm" 
+                  ? "bg-blue-50 text-blue-700 shadow-sm" 
                   : "text-zinc-500 hover:bg-zinc-50 hover:text-zinc-900"
               )}
             >
@@ -94,7 +100,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         <div className="p-4 border-t border-zinc-100">
           <div className="bg-zinc-50 rounded-2xl p-4 mb-4">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-bold text-xs">
+              <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-xs">
                 {user?.name.charAt(0)}
               </div>
               <div className="flex-1 min-w-0">

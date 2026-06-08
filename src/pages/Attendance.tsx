@@ -18,7 +18,7 @@ export default function Attendance() {
   const [employees, setEmployees] = useState<UserProfile[]>([]);
   const [search, setSearch] = useState('');
   const [filterBranch, setFilterBranch] = useState('All');
-  const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [selectedDate, setSelectedDate] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -170,7 +170,7 @@ export default function Attendance() {
                     toast.error('Failed to check in or already checked in today');
                   }
                 }}
-                className="bg-orange-500 text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 hover:bg-orange-600 transition-all shadow-lg shadow-orange-100"
+                className="bg-blue-600 text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 hover:bg-blue-700 transition-all shadow-lg shadow-blue-100"
               >
                 <ArrowUpRight size={18} />
                 Check In
@@ -213,7 +213,7 @@ export default function Attendance() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-white p-6 rounded-3xl border border-zinc-100 shadow-sm">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center text-orange-600">
+            <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-700">
               <UserCheck size={18} />
             </div>
             <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Total Logs</span>
@@ -250,13 +250,13 @@ export default function Attendance() {
               placeholder="Search by employee name..." 
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-zinc-50 border border-zinc-100 rounded-2xl text-sm focus:ring-2 focus:ring-orange-500 outline-none transition-all"
+              className="w-full pl-12 pr-4 py-3 bg-zinc-50 border border-zinc-100 rounded-2xl text-sm focus:ring-2 focus:ring-blue-600 outline-none transition-all"
             />
           </div>
           <select 
             value={filterBranch}
             onChange={(e) => setFilterBranch(e.target.value)}
-            className="px-4 py-3 bg-zinc-50 border border-zinc-100 rounded-2xl text-sm font-bold text-zinc-600 outline-none focus:ring-2 focus:ring-orange-500"
+            className="px-4 py-3 bg-zinc-50 border border-zinc-100 rounded-2xl text-sm font-bold text-zinc-600 outline-none focus:ring-2 focus:ring-blue-600"
           >
             {branches.map(b => <option key={b} value={b}>{b}</option>)}
           </select>
@@ -266,7 +266,7 @@ export default function Attendance() {
               type="date" 
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
-              className="pl-12 pr-4 py-3 bg-zinc-50 border border-zinc-100 rounded-2xl text-sm font-bold text-zinc-600 outline-none focus:ring-2 focus:ring-orange-500"
+              className="pl-12 pr-4 py-3 bg-zinc-50 border border-zinc-100 rounded-2xl text-sm font-bold text-zinc-600 outline-none focus:ring-2 focus:ring-blue-600"
             />
             {selectedDate && (
               <button 

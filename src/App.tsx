@@ -17,6 +17,9 @@ import Performance from './pages/Performance';
 import Calendar from './pages/Calendar';
 import Profile from './pages/Profile';
 import BankDetails from './pages/BankDetails';
+import Tasks from './pages/Tasks';
+import Qualifications from './pages/Qualifications';
+import Leaderboard from './pages/Leaderboard';
 
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
@@ -25,7 +28,7 @@ const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   if (loading) {
     return (
       <div className="h-screen w-full flex items-center justify-center bg-zinc-50">
-        <div className="w-12 h-12 border-4 border-zinc-200 border-t-orange-500 rounded-full animate-spin" />
+        <div className="w-12 h-12 border-4 border-zinc-200 border-t-blue-600 rounded-full animate-spin" />
       </div>
     );
   }
@@ -35,15 +38,15 @@ const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   }
 
   return (
-    <div className="flex min-h-screen bg-zinc-50">
+    <div className="flex min-h-screen bg-transparent">
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="h-16 bg-white border-b border-zinc-200 flex items-center px-4 lg:hidden sticky top-0 z-30">
+        <header className="h-16 bg-white/80 backdrop-blur-md border-b border-zinc-200 flex items-center px-4 lg:hidden sticky top-0 z-30">
           <button 
             onClick={() => setIsSidebarOpen(true)}
-            className="p-2 text-zinc-500 hover:bg-zinc-50 rounded-xl transition-colors"
+            className="p-2.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-xl transition-colors shadow-sm"
           >
-            <Menu size={24} />
+            <Menu size={22} />
           </button>
             <Logo size="sm" />
             <span className="ml-3 font-black text-zinc-900 tracking-tight">HR PULSE</span>
@@ -74,6 +77,9 @@ function AppRoutes() {
       <Route path="/manage-payroll" element={<PrivateRoute><ManagePayroll /></PrivateRoute>} />
       <Route path="/performance" element={<PrivateRoute><Performance /></PrivateRoute>} />
       <Route path="/calendar" element={<PrivateRoute><Calendar /></PrivateRoute>} />
+      <Route path="/tasks" element={<PrivateRoute><Tasks /></PrivateRoute>} />
+      <Route path="/qualifications" element={<PrivateRoute><Qualifications /></PrivateRoute>} />
+      <Route path="/leaderboard" element={<PrivateRoute><Leaderboard /></PrivateRoute>} />
       <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

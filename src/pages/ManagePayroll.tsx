@@ -222,7 +222,7 @@ export default function ManagePayroll() {
             placeholder="Search pending payrolls..." 
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 bg-zinc-50 border border-zinc-100 rounded-2xl text-sm focus:ring-2 focus:ring-orange-500 outline-none transition-all"
+            className="w-full pl-12 pr-4 py-3 bg-zinc-50 border border-zinc-100 rounded-2xl text-sm focus:ring-2 focus:ring-blue-600 outline-none transition-all"
           />
         </div>
         <div className="flex flex-wrap gap-3 w-full lg:w-auto justify-end">
@@ -239,14 +239,14 @@ export default function ManagePayroll() {
           <select 
             value={filterMonth}
             onChange={(e) => setFilterMonth(Number(e.target.value))}
-            className="px-4 py-3 bg-zinc-50 border border-zinc-100 rounded-2xl text-sm font-bold text-zinc-600 outline-none focus:ring-2 focus:ring-orange-500"
+            className="px-4 py-3 bg-zinc-50 border border-zinc-100 rounded-2xl text-sm font-bold text-zinc-600 outline-none focus:ring-2 focus:ring-blue-600"
           >
             {months.map((m, i) => <option key={m} value={i}>{m}</option>)}
           </select>
           <select 
             value={filterYear}
             onChange={(e) => setFilterYear(Number(e.target.value))}
-            className="px-4 py-3 bg-zinc-50 border border-zinc-100 rounded-2xl text-sm font-bold text-zinc-600 outline-none focus:ring-2 focus:ring-orange-500"
+            className="px-4 py-3 bg-zinc-50 border border-zinc-100 rounded-2xl text-sm font-bold text-zinc-600 outline-none focus:ring-2 focus:ring-blue-600"
           >
             {[2024, 2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
           </select>
@@ -264,19 +264,19 @@ export default function ManagePayroll() {
               key={uniqueId}
               className={cn(
                 "bg-white p-6 rounded-[2.5rem] border border-zinc-100 shadow-sm hover:shadow-md transition-all flex flex-col lg:flex-row lg:items-center gap-6",
-                isDraft && "border-dashed border-orange-200 bg-orange-50/10"
+                isDraft && "border-dashed border-blue-200 bg-blue-50/10"
               )}
             >
               <div className="flex items-center gap-4 min-w-[200px]">
                 <div className="w-12 h-12 rounded-2xl bg-zinc-100 flex items-center justify-center text-zinc-500 font-black relative">
                   {p.userName?.charAt(0) || '?'}
-                  {isDraft && <div className="absolute -top-1 -right-1 w-3 h-3 bg-orange-500 rounded-full border-2 border-white" />}
+                  {isDraft && <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-600 rounded-full border-2 border-white" />}
                 </div>
                 <div>
                   <h3 className="font-bold text-zinc-900">{p.userName || 'Unknown'}</h3>
                   <div className="flex items-center gap-2">
                     <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">{p.branch || 'General'}</p>
-                    {isDraft && <span className="text-[9px] font-black bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded uppercase tracking-tighter">Draft</span>}
+                    {isDraft && <span className="text-[9px] font-black bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded uppercase tracking-tighter">Draft</span>}
                   </div>
                 </div>
               </div>
@@ -289,7 +289,7 @@ export default function ManagePayroll() {
                       type="number" 
                       value={editData.salaryA ?? p.salaryA}
                       onChange={(e) => setEditData({ ...editData, salaryA: Number(e.target.value) })}
-                      className="w-full px-3 py-1 bg-zinc-50 border border-zinc-100 rounded-lg text-sm font-bold text-zinc-900 outline-none focus:ring-2 focus:ring-orange-500"
+                      className="w-full px-3 py-1 bg-zinc-50 border border-zinc-100 rounded-lg text-sm font-bold text-zinc-900 outline-none focus:ring-2 focus:ring-blue-600"
                     />
                   ) : (
                     <p className="text-sm font-black text-zinc-900">{(p.salaryA || 0).toLocaleString()}</p>
@@ -367,8 +367,8 @@ export default function ManagePayroll() {
                 </div>
 
                 <div>
-                  <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1 text-orange-500">Net Payout</p>
-                  <p className="text-sm font-black text-orange-600">LKR {(p.netSalary || 0).toLocaleString()}</p>
+                  <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1 text-blue-600">Net Payout</p>
+                  <p className="text-sm font-black text-blue-700">LKR {(p.netSalary || 0).toLocaleString()}</p>
                 </div>
               </div>
 
@@ -419,7 +419,7 @@ export default function ManagePayroll() {
                                 </button>
                                 <button 
                                   onClick={() => handleMarkAsPaid(p.userId, isDraft, p.id)}
-                                  className="px-6 py-3 bg-orange-500 text-white rounded-2xl font-bold text-xs hover:bg-orange-600 transition-all shadow-lg shadow-orange-100 flex items-center gap-2"
+                                  className="px-6 py-3 bg-blue-600 text-white rounded-2xl font-bold text-xs hover:bg-blue-700 transition-all shadow-lg shadow-blue-100 flex items-center gap-2"
                                 >
                                   <DollarSign size={16} />
                                   Process Payment

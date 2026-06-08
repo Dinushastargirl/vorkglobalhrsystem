@@ -178,13 +178,13 @@ export default function Calendar() {
                   className={cn(
                     "aspect-square rounded-2xl flex flex-col items-center justify-center relative transition-all group cursor-default border border-transparent",
                     isToday ? "bg-zinc-900 text-white shadow-lg shadow-zinc-200" : "hover:bg-zinc-50",
-                    holiday ? "bg-orange-50/50 border-orange-100" : "",
+                    holiday ? "bg-blue-50/50 border-blue-100" : "",
                     userLeave ? (userLeave.status === 'Approved' ? "bg-green-50/50 border-green-100" : "bg-amber-50/50 border-amber-100") : ""
                   )}
                 >
                   <span className={cn(
                     "text-sm font-black", 
-                    holiday && !isToday ? "text-orange-600" : "",
+                    holiday && !isToday ? "text-blue-700" : "",
                     userLeave && !isToday ? (userLeave.status === 'Approved' ? "text-green-600" : "text-amber-600") : ""
                   )}>
                     {day}
@@ -192,7 +192,7 @@ export default function Calendar() {
                   
                   <div className="absolute bottom-2 flex gap-1 items-center">
                     {holiday && (
-                      <div className="w-1 h-1 rounded-full bg-orange-500 shadow-sm" />
+                      <div className="w-1 h-1 rounded-full bg-blue-600 shadow-sm" />
                     )}
                     {userLeave && (
                       <div className={cn(
@@ -204,7 +204,7 @@ export default function Calendar() {
 
                   {(holiday || userLeave) && (
                     <div className="absolute bottom-full mb-2 hidden group-hover:block z-10 w-40 p-2 bg-zinc-900 text-white text-[10px] font-bold rounded-lg text-center shadow-xl leading-snug">
-                      {holiday && <p className="text-orange-400">🌕 {holiday.title}</p>}
+                      {holiday && <p className="text-blue-400">🌕 {holiday.title}</p>}
                       {userLeave && <p className={userLeave.status === 'Approved' ? "text-green-400" : "text-amber-400"}>
                         {userLeave.status === 'Approved' ? '✅' : '⏳'} {userLeave.leaveType} {(userLeave.status)}
                       </p>}
@@ -220,7 +220,7 @@ export default function Calendar() {
         <div className="space-y-6">
           <div className="bg-zinc-900 p-8 rounded-[2.5rem] text-white">
             <div className="flex items-center gap-3 mb-6">
-              <PartyPopper className="text-orange-400" size={24} />
+              <PartyPopper className="text-blue-400" size={24} />
               <h3 className="font-black text-lg">Internet Sync</h3>
             </div>
             <div className="space-y-6">
@@ -230,7 +230,7 @@ export default function Calendar() {
                 upcomingHolidays.map((h, i) => (
                   <div key={i} className="flex gap-4">
                     <div className="w-12 h-12 rounded-2xl bg-white/10 flex flex-col items-center justify-center shrink-0 border border-white/5">
-                      <span className="text-[10px] font-black uppercase text-orange-400">
+                      <span className="text-[10px] font-black uppercase text-blue-400">
                         {new Date(h.date).toLocaleDateString('en-US', { month: 'short' })}
                       </span>
                       <span className="text-lg font-black leading-none">
@@ -265,7 +265,7 @@ export default function Calendar() {
                 <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-wider">Pending Status</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-orange-500" />
+                <div className="w-2 h-2 rounded-full bg-blue-600" />
                 <span className="text-[10px] font-bold text-zinc-600 uppercase tracking-wider">Public Holiday</span>
               </div>
             </div>

@@ -1,5 +1,23 @@
 export type UserRole = 'super' | 'owner' | 'hr' | 'employee';
 
+export interface EmploymentHistory {
+  id: string;
+  company: string;
+  role: string;
+  startDate: string;
+  endDate: string;
+  description: string;
+}
+
+export interface TechEquipment {
+  id: string;
+  type: string;
+  model: string;
+  serialNumber: string;
+  issuedDate: string;
+  status: 'Active' | 'Returned' | 'Repair';
+}
+
 export interface UserProfile {
   uid: string;
   name: string;
@@ -42,6 +60,9 @@ export interface UserProfile {
   nic?: string;
   nickname?: string;
   extraDays?: number;
+  employmentHistory?: EmploymentHistory[];
+  skills?: string[];
+  techEquipment?: TechEquipment[];
 }
 
 export interface AttendanceRecord {

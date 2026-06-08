@@ -144,7 +144,7 @@ export default function Performance() {
       list.push({ text: "High Efficiency Master", icon: Target, color: "text-blue-400" });
     }
     if (xMetrics.final > 90) {
-      list.push({ text: "Top Tier Performance", icon: Award, color: "text-orange-400" });
+      list.push({ text: "Top Tier Performance", icon: Award, color: "text-blue-400" });
     }
     if (list.length === 0) {
       list.push({ text: "Consistency in Progress", icon: TrendingUp, color: "text-zinc-400" });
@@ -173,7 +173,7 @@ export default function Performance() {
           <select 
             value={selectedEmp?.uid}
             onChange={(e) => setSelectedEmp(employees.find(emp => emp.uid === e.target.value) || null)}
-            className="px-6 py-4 bg-white border border-zinc-100 rounded-2xl text-sm font-black text-zinc-800 outline-none focus:ring-2 focus:ring-orange-500 shadow-sm"
+            className="px-6 py-4 bg-white border border-zinc-100 rounded-2xl text-sm font-black text-zinc-800 outline-none focus:ring-2 focus:ring-blue-600 shadow-sm"
           >
             {employees.map(e => <option key={e.uid} value={e.uid}>{e.name}</option>)}
           </select>
@@ -184,7 +184,7 @@ export default function Performance() {
         {/* Profile Card */}
         <div className="lg:col-span-1 space-y-6">
           <div className="bg-white p-8 rounded-[3rem] border border-zinc-50 shadow-xl shadow-zinc-100/50 text-center relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/5 rounded-full -mr-16 -mt-16 blur-3xl"></div>
+            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-600/5 rounded-full -mr-16 -mt-16 blur-3xl"></div>
             <div className="w-24 h-24 rounded-4xl bg-linear-to-br from-zinc-50 to-zinc-100 mx-auto mb-6 flex items-center justify-center text-zinc-800 font-black text-3xl shadow-inner border border-zinc-200">
               {selectedEmp?.name.charAt(0)}
             </div>
@@ -196,17 +196,17 @@ export default function Performance() {
                 <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1 text-center">Score</p>
                 <p className="text-3xl font-black text-zinc-900">{xMetrics.final}%</p>
               </div>
-              <div className="bg-orange-50 p-6 rounded-3xl border border-orange-100/50">
-                <p className="text-[10px] font-black text-orange-400 uppercase tracking-widest mb-1 text-center">Rank</p>
-                <p className="text-3xl font-black text-orange-600">#{xMetrics.rank}</p>
+              <div className="bg-blue-50 p-6 rounded-3xl border border-blue-100/50">
+                <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-1 text-center">Rank</p>
+                <p className="text-3xl font-black text-blue-700">#{xMetrics.rank}</p>
               </div>
             </div>
           </div>
 
           <div className="bg-zinc-900 p-8 rounded-[3rem] text-white shadow-2xl shadow-zinc-900/20">
             <div className="flex items-center gap-3 mb-8">
-              <div className="w-10 h-10 rounded-xl bg-orange-500/20 flex items-center justify-center">
-                <Award className="text-orange-400" size={20} />
+              <div className="w-10 h-10 rounded-xl bg-blue-600/20 flex items-center justify-center">
+                <Award className="text-blue-400" size={20} />
               </div>
               <h3 className="font-black text-xl tracking-tight">Key Achievements</h3>
             </div>
@@ -228,8 +228,8 @@ export default function Performance() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="bg-white p-8 rounded-[3rem] border border-zinc-50 shadow-xl shadow-zinc-100/50">
               <h3 className="font-black text-zinc-900 mb-8 flex items-center gap-3 text-lg">
-                <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center">
-                  <Target size={20} className="text-orange-500" />
+                <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
+                  <Target size={20} className="text-blue-600" />
                 </div>
                 Skill Distribution
               </h3>
@@ -279,7 +279,7 @@ export default function Performance() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {[
               { label: 'Efficiency', val: `${xMetrics.efficiency}%`, icon: Zap, color: 'text-yellow-500', bg: 'bg-yellow-50' },
-              { label: 'Punctuality', val: `${xMetrics.punctuality}%`, icon: Star, color: 'text-orange-500', bg: 'bg-orange-50' },
+              { label: 'Punctuality', val: `${xMetrics.punctuality}%`, icon: Star, color: 'text-blue-600', bg: 'bg-blue-50' },
               { label: 'Attendance', val: `${xMetrics.reliability}%`, icon: CheckCircle2, color: 'text-green-500', bg: 'bg-green-50' },
               { label: 'Reliability', val: `${xMetrics.reliability}%`, icon: BarChart3, color: 'text-blue-500', bg: 'bg-blue-50' },
             ].map((m, i) => (

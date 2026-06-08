@@ -18,6 +18,11 @@ export async function getTasks(userId: string): Promise<Task[]> {
     .sort((a, b) => new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime());
 }
 
+export async function getAllTasks(): Promise<Task[]> {
+  const tasks = getStoredTasks();
+  return tasks.sort((a, b) => new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime());
+}
+
 export async function addTask(userId: string, title: string): Promise<void> {
   const tasks = getStoredTasks();
   tasks.push({

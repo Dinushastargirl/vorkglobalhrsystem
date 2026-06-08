@@ -322,7 +322,7 @@ export default function Dashboard() {
       <div className="bg-white p-6 rounded-4xl border border-zinc-100 shadow-sm">
         <div className="flex items-center justify-between mb-6">
           <h3 className="font-bold text-zinc-900 flex items-center gap-2">
-            <CalendarIcon size={18} className="text-orange-500" />
+            <CalendarIcon size={18} className="text-blue-600" />
             {monthNames[month]} {year}
           </h3>
           <div className="flex gap-1">
@@ -351,9 +351,9 @@ export default function Dashboard() {
               key={i} 
               className={cn(
                 "aspect-square flex items-center justify-center text-xs font-bold rounded-xl transition-all",
-                !day ? "invisible" : "hover:bg-orange-50 cursor-default",
+                !day ? "invisible" : "hover:bg-blue-50 cursor-default",
                 day === today.getDate() && month === today.getMonth() && year === today.getFullYear() 
-                  ? "bg-orange-500 text-white shadow-lg shadow-orange-200" 
+                  ? "bg-blue-600 text-white shadow-lg shadow-blue-200" 
                   : "text-zinc-600"
               )}
             >
@@ -422,7 +422,7 @@ export default function Dashboard() {
                     </div>
                     <div className="text-right hidden md:block border-l border-white/10 pl-6">
                       <p className="text-5xl font-black tracking-tighter tabular-nums">{currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
-                      <p className="text-[10px] font-black text-orange-400 uppercase tracking-widest">{currentTime.toLocaleDateString([], { weekday: 'long' })}</p>
+                      <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest">{currentTime.toLocaleDateString([], { weekday: 'long' })}</p>
                     </div>
                   </div>
                 </div>
@@ -441,14 +441,14 @@ export default function Dashboard() {
                     </div>
                     <div className="bg-white/5 backdrop-blur-md p-4 rounded-2xl border border-white/10">
                       <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">Pending Requests</p>
-                      <p className="text-2xl font-black text-orange-400">{mStats.pendingRequests}</p>
+                      <p className="text-2xl font-black text-blue-400">{mStats.pendingRequests}</p>
                     </div>
                   </>
                 ) : (
                   <>
                     <div className="bg-white/5 backdrop-blur-md p-4 rounded-2xl border border-white/10">
                     <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">Performance</p>
-                    <p className="text-2xl font-black text-orange-400">{currentPerformance}%</p>
+                    <p className="text-2xl font-black text-blue-400">{currentPerformance}%</p>
                   </div>
                   <div className="bg-white/5 backdrop-blur-md p-4 rounded-2xl border border-white/10">
                     <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">Net Pay</p>
@@ -476,7 +476,7 @@ export default function Dashboard() {
                     {!(attendance.find(r => r.date === getLocalToday())) ? (
                       <button 
                         onClick={handleCheckIn}
-                        className="bg-orange-500 text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 hover:bg-orange-600 transition-all shadow-lg shadow-orange-900/20"
+                        className="bg-blue-600 text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 hover:bg-blue-700 transition-all shadow-lg shadow-blue-950/20"
                       >
                         <ArrowUpRight size={20} />
                         Check In Now
@@ -498,7 +498,7 @@ export default function Dashboard() {
                   </>
                 ) : (
                   <div className="flex gap-4">
-                    <div className="bg-orange-500 text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 shadow-lg shadow-orange-900/20">
+                    <div className="bg-blue-600 text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 shadow-lg shadow-blue-950/20">
                       <ShieldCheck size={20} />
                       Management Mode
                     </div>
@@ -519,7 +519,7 @@ export default function Dashboard() {
                 </button>
               </div>
             </div>
-            <div className="absolute top-[-20%] right-[-10%] w-64 h-64 bg-orange-500/10 rounded-full blur-3xl"></div>
+            <div className="absolute top-[-20%] right-[-10%] w-64 h-64 bg-blue-600/10 rounded-full blur-3xl"></div>
           </div>
 
           {/* Analytics Row */}
@@ -527,7 +527,7 @@ export default function Dashboard() {
             <div className="bg-white p-6 rounded-4xl border border-zinc-100 shadow-sm">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="font-bold text-zinc-900 flex items-center gap-2 text-sm uppercase tracking-widest">
-                  <TrendingUp size={16} className="text-orange-500" />
+                  <TrendingUp size={16} className="text-blue-600" />
                   {isAdmin ? 'Company Resources' : 'My Leave Status'}
                 </h3>
               </div>
@@ -592,7 +592,7 @@ export default function Dashboard() {
             <div className="bg-white p-6 rounded-4xl border border-zinc-100 shadow-sm">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="font-bold text-zinc-900 flex items-center gap-2 text-sm uppercase tracking-widest">
-                  <Timer size={16} className="text-orange-500" />
+                  <Timer size={16} className="text-blue-600" />
                   {isAdmin ? 'System Load' : 'Weekly Activity'}
                 </h3>
               </div>
@@ -615,7 +615,7 @@ export default function Dashboard() {
           {/* Quick Peek */}
           <div className="bg-zinc-900 p-6 rounded-4xl text-white shadow-xl shadow-zinc-200">
             <h3 className="font-bold text-sm uppercase tracking-widest text-zinc-500 mb-6 flex items-center gap-2">
-              <ShieldCheck size={16} className="text-orange-500" />
+              <ShieldCheck size={16} className="text-blue-600" />
               Company Health
             </h3>
             <div className="space-y-4">
@@ -623,7 +623,7 @@ export default function Dashboard() {
                 <span className="text-zinc-400 text-sm">Attendance</span>
                 <span className={cn(
                   "font-black",
-                  mStats.activeNow / (mStats.totalStaff || 1) > 0.8 ? "text-green-400" : "text-orange-400"
+                  mStats.activeNow / (mStats.totalStaff || 1) > 0.8 ? "text-green-400" : "text-blue-400"
                 )}>
                   {Math.round((mStats.activeNow / (mStats.totalStaff || 1)) * 100)}% Active
                 </span>
@@ -632,7 +632,7 @@ export default function Dashboard() {
                 <span className="text-zinc-400 text-sm">Leave Volume</span>
                 <span className={cn(
                   "font-black",
-                  mStats.pendingRequests > 5 ? "text-red-400" : mStats.pendingRequests > 2 ? "text-orange-400" : "text-green-400"
+                  mStats.pendingRequests > 5 ? "text-red-400" : mStats.pendingRequests > 2 ? "text-blue-400" : "text-green-400"
                 )}>
                   {mStats.pendingRequests > 5 ? 'High Load' : mStats.pendingRequests > 2 ? 'Moderate' : 'Normal'}
                 </span>
@@ -648,14 +648,14 @@ export default function Dashboard() {
           <div className="bg-white p-6 rounded-4xl border border-zinc-100 shadow-sm flex flex-col">
             <div className="flex items-center justify-between mb-6">
               <h3 className="font-bold text-zinc-900 flex items-center gap-2">
-                <ListTodo size={18} className="text-orange-500" />
+                <ListTodo size={18} className="text-blue-600" />
                 Daily Tasks
               </h3>
               {isAdmin && (
                 <select 
                   value={selectedTaskUserId || ''} 
                   onChange={(e) => setSelectedTaskUserId(e.target.value)}
-                  className="text-[10px] uppercase tracking-widest font-black bg-zinc-50 border border-zinc-100 rounded-lg px-3 py-1.5 outline-none focus:ring-2 focus:ring-orange-500 transition-all cursor-pointer"
+                  className="text-[10px] uppercase tracking-widest font-black bg-zinc-50 border border-zinc-100 rounded-lg px-3 py-1.5 outline-none focus:ring-2 focus:ring-blue-600 transition-all cursor-pointer"
                 >
                   <option value={uid!}>My Workspace</option>
                   <optgroup label="Employees">
@@ -672,7 +672,7 @@ export default function Dashboard() {
                   name="taskTitle"
                   type="text" 
                   placeholder="Add a new task..." 
-                  className="w-full pl-4 pr-12 py-3 bg-zinc-50 border border-zinc-100 rounded-2xl text-sm focus:ring-2 focus:ring-orange-500 outline-none transition-all"
+                  className="w-full pl-4 pr-12 py-3 bg-zinc-50 border border-zinc-100 rounded-2xl text-sm focus:ring-2 focus:ring-blue-600 outline-none transition-all"
                 />
                 <button type="submit" className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-zinc-900 text-white rounded-xl hover:bg-zinc-800 transition-all">
                   <Plus size={16} />
@@ -690,14 +690,14 @@ export default function Dashboard() {
                     key={task.id} 
                     className={cn(
                       "group flex items-center gap-3 p-4 rounded-2xl border transition-all",
-                      task.completed ? "bg-zinc-50 border-zinc-100 opacity-60" : "bg-white border-zinc-100 hover:border-orange-200"
+                      task.completed ? "bg-zinc-50 border-zinc-100 opacity-60" : "bg-white border-zinc-100 hover:border-blue-200"
                     )}
                   >
                     <div 
                       onClick={() => toggleTask(task.id!, task.completed)}
                       className={cn(
                         "w-5 h-5 rounded-md border flex items-center justify-center transition-all cursor-pointer shadow-sm",
-                        task.completed ? "bg-green-500 border-green-500 text-white" : "border-zinc-300 group-hover:border-orange-400 bg-white"
+                        task.completed ? "bg-green-500 border-green-500 text-white" : "border-zinc-300 group-hover:border-blue-400 bg-white"
                       )}
                     >
                       {task.completed && <CheckCircle2 size={12} />}
@@ -729,7 +729,7 @@ export default function Dashboard() {
       <div className="bg-white rounded-4xl border border-zinc-100 shadow-sm overflow-hidden">
         <div className="p-8 border-b border-zinc-50 flex items-center justify-between">
           <h2 className="text-xl font-black text-zinc-900">Recent Leave Requests</h2>
-          <button className="text-sm font-bold text-orange-500 hover:text-orange-600 transition-colors">View All</button>
+          <button className="text-sm font-bold text-blue-600 hover:text-blue-700 transition-colors">View All</button>
         </div>
 
         {/* Desktop View: Wide Table Layout */}
@@ -905,7 +905,7 @@ export default function Dashboard() {
                   <select
                     value={leaveType}
                     onChange={(e) => setLeaveType(e.target.value as LeaveType)}
-                    className="w-full px-5 py-4 rounded-2xl bg-zinc-50 border border-zinc-100 focus:ring-2 focus:ring-orange-500 focus:bg-white outline-none transition-all font-medium"
+                    className="w-full px-5 py-4 rounded-2xl bg-zinc-50 border border-zinc-100 focus:ring-2 focus:ring-blue-600 focus:bg-white outline-none transition-all font-medium"
                   >
                     {['Annual', 'Sick', 'Casual', 'Short'].map(type => (
                       <option key={type} value={type}>{type}</option>
@@ -922,7 +922,7 @@ export default function Dashboard() {
                       required
                       value={startDate}
                       onChange={(e) => setStartDate(e.target.value)}
-                      className="w-full px-5 py-4 rounded-2xl bg-zinc-50 border border-zinc-100 focus:ring-2 focus:ring-orange-500 focus:bg-white outline-none transition-all font-bold text-zinc-800"
+                      className="w-full px-5 py-4 rounded-2xl bg-zinc-50 border border-zinc-100 focus:ring-2 focus:ring-blue-600 focus:bg-white outline-none transition-all font-bold text-zinc-800"
                     />
                   </div>
                   {leaveType.toLowerCase() !== 'short' ? (
@@ -933,7 +933,7 @@ export default function Dashboard() {
                         required
                         value={endDate}
                         onChange={(e) => setEndDate(e.target.value)}
-                        className="w-full px-5 py-4 rounded-2xl bg-zinc-50 border border-zinc-100 focus:ring-2 focus:ring-orange-500 focus:bg-white outline-none transition-all font-bold text-zinc-800"
+                        className="w-full px-5 py-4 rounded-2xl bg-zinc-50 border border-zinc-100 focus:ring-2 focus:ring-blue-600 focus:bg-white outline-none transition-all font-bold text-zinc-800"
                       />
                     </div>
                   ) : (
@@ -945,7 +945,7 @@ export default function Dashboard() {
                           required
                           value={startTime}
                           onChange={(e) => setStartTime(e.target.value)}
-                          className="w-full px-3 py-4 rounded-2xl bg-zinc-50 border border-zinc-100 focus:ring-2 focus:ring-orange-500 focus:bg-white outline-none transition-all font-bold text-zinc-800"
+                          className="w-full px-3 py-4 rounded-2xl bg-zinc-50 border border-zinc-100 focus:ring-2 focus:ring-blue-600 focus:bg-white outline-none transition-all font-bold text-zinc-800"
                         />
                       </div>
                       <div>
@@ -955,7 +955,7 @@ export default function Dashboard() {
                           required
                           value={endTime}
                           onChange={(e) => setEndTime(e.target.value)}
-                          className="w-full px-3 py-4 rounded-2xl bg-zinc-50 border border-zinc-100 focus:ring-2 focus:ring-orange-500 focus:bg-white outline-none transition-all font-bold text-zinc-800"
+                          className="w-full px-3 py-4 rounded-2xl bg-zinc-50 border border-zinc-100 focus:ring-2 focus:ring-blue-600 focus:bg-white outline-none transition-all font-bold text-zinc-800"
                         />
                       </div>
                     </div>
@@ -968,7 +968,7 @@ export default function Dashboard() {
                     rows={3}
                     value={reason}
                     onChange={(e) => setReason(e.target.value)}
-                    className="w-full px-5 py-4 rounded-2xl bg-zinc-50 border border-zinc-100 focus:ring-2 focus:ring-orange-500 focus:bg-white outline-none transition-all resize-none font-medium"
+                    className="w-full px-5 py-4 rounded-2xl bg-zinc-50 border border-zinc-100 focus:ring-2 focus:ring-blue-600 focus:bg-white outline-none transition-all resize-none font-medium"
                     placeholder="Briefly explain the reason for your leave..."
                   />
                 </div>
@@ -984,10 +984,10 @@ export default function Dashboard() {
                     />
                     <label
                       htmlFor="leave-image"
-                      className="flex items-center justify-center gap-2 w-full px-5 py-4 rounded-2xl bg-zinc-50 border border-dashed border-zinc-200 hover:border-orange-300 hover:bg-orange-50 transition-all cursor-pointer group"
+                      className="flex items-center justify-center gap-2 w-full px-5 py-4 rounded-2xl bg-zinc-50 border border-dashed border-zinc-200 hover:border-blue-300 hover:bg-blue-50 transition-all cursor-pointer group"
                     >
-                      <Camera size={20} className="text-zinc-400 group-hover:text-orange-500" />
-                      <span className="text-sm font-bold text-zinc-500 group-hover:text-orange-600">
+                      <Camera size={20} className="text-zinc-400 group-hover:text-blue-600" />
+                      <span className="text-sm font-bold text-zinc-500 group-hover:text-blue-700">
                         {leaveImage ? 'Image Selected' : 'Upload Image/Document'}
                       </span>
                     </label>
@@ -1016,7 +1016,7 @@ export default function Dashboard() {
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="flex-1 bg-orange-500 text-white px-6 py-4 rounded-2xl font-bold hover:bg-orange-600 transition-all shadow-lg shadow-orange-100 disabled:opacity-50"
+                    className="flex-1 bg-blue-600 text-white px-6 py-4 rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-100 disabled:opacity-50"
                   >
                     {submitting ? 'Submitting...' : 'Submit Request'}
                   </button>
@@ -1061,7 +1061,7 @@ export default function Dashboard() {
                   </button>
                   <button
                     onClick={() => proceedSubmit(pendingSubmitData)}
-                    className="flex-1 px-6 py-4 rounded-2xl font-bold text-white bg-orange-500 hover:bg-orange-600 transition-all shadow-lg shadow-orange-100"
+                    className="flex-1 px-6 py-4 rounded-2xl font-bold text-white bg-blue-600 hover:bg-blue-700 transition-all shadow-lg shadow-blue-100"
                   >
                     Yes, Continue
                   </button>

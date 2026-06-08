@@ -1,4 +1,5 @@
 import React from 'react';
+import { Coffee } from 'lucide-react';
 
 interface LogoProps {
   size?: 'sm' | 'md' | 'lg' | 'xl';
@@ -13,16 +14,16 @@ export default function Logo({ size = 'md', className = '' }: LogoProps) {
     xl: 'w-16 h-16'
   };
 
-  const logoUrl = "https://xtmzwvoloilxjcjgbgfx.supabase.co/storage/v1/object/public/branding/logo.png";
+  const iconSizes = {
+    sm: 16,
+    md: 20,
+    lg: 24,
+    xl: 32
+  };
 
   return (
-    <div className={`relative flex items-center justify-center bg-black rounded-full shadow-lg overflow-hidden ${containerSizes[size]} ${className}`}>
-      <img 
-        src={logoUrl} 
-        alt="HR Pulse" 
-        className="w-full h-full object-cover"
-        style={{ filter: 'brightness(1.1)' }}
-      />
+    <div className={`relative flex items-center justify-center bg-blue-50 text-blue-600 rounded-full shadow-sm border border-blue-100 ${containerSizes[size]} ${className}`}>
+      <Coffee size={iconSizes[size]} strokeWidth={2.5} />
     </div>
   );
 }

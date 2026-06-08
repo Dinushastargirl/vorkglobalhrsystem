@@ -37,7 +37,7 @@ export default function Login() {
     <div className="min-h-screen bg-zinc-50 flex items-center justify-center p-6">
       <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 bg-white rounded-[2.5rem] shadow-2xl shadow-zinc-200/50 overflow-hidden border border-zinc-100">
         {/* Left Side - Visual */}
-        <div className="hidden lg:flex flex-col justify-between p-12 bg-linear-to-br from-orange-500 to-orange-700 text-white relative overflow-hidden">
+        <div className="hidden lg:flex flex-col justify-between p-12 bg-linear-to-br from-blue-600 to-blue-800 text-white relative overflow-hidden">
           <div className="relative z-10">
             <div className="flex items-center gap-3 mb-12">
               <Logo size="lg" className="mb-4" />
@@ -46,20 +46,20 @@ export default function Login() {
             <h2 className="text-5xl font-black leading-tight mb-6">
               Manage your <br /> workforce with <br /> precision.
             </h2>
-            <p className="text-orange-100 text-lg font-medium max-w-sm">
+            <p className="text-blue-100 text-lg font-medium max-w-sm">
               The all-in-one platform for attendance, payroll, and employee growth.
             </p>
           </div>
 
           <div className="relative z-10">
-            <p className="text-sm font-bold text-orange-100 uppercase tracking-[0.15em] opacity-80">
+            <p className="text-sm font-bold text-blue-100 uppercase tracking-[0.15em] opacity-80">
               Powered by Vork.Global
             </p>
           </div>
 
           {/* Decorative elements */}
           <div className="absolute top-[-10%] right-[-10%] w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-[-10%] left-[-5%] w-48 h-48 bg-orange-400/20 rounded-full blur-2xl"></div>
+          <div className="absolute bottom-[-10%] left-[-5%] w-48 h-48 bg-blue-400/20 rounded-full blur-2xl"></div>
         </div>
 
         {/* Right Side - Form */}
@@ -78,7 +78,7 @@ export default function Login() {
                   placeholder="Email Address or Username"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-12 pr-4 py-4 bg-zinc-50 border border-zinc-100 rounded-2xl text-sm font-medium focus:ring-2 focus:ring-orange-500 focus:bg-white outline-none transition-all"
+                  className="w-full pl-12 pr-4 py-4 bg-zinc-50 border border-zinc-100 rounded-2xl text-sm font-medium focus:ring-2 focus:ring-blue-600 focus:bg-white outline-none transition-all"
                   required
                 />
               </div>
@@ -90,13 +90,13 @@ export default function Login() {
                   placeholder="Password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-12 pr-12 py-4 bg-zinc-50 border border-zinc-100 rounded-2xl text-sm font-medium focus:ring-2 focus:ring-orange-500 focus:bg-white outline-none transition-all"
+                  className="w-full pl-12 pr-12 py-4 bg-zinc-50 border border-zinc-100 rounded-2xl text-sm font-medium focus:ring-2 focus:ring-blue-600 focus:bg-white outline-none transition-all"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-orange-500 transition-colors"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-blue-600 transition-colors"
                 >
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>

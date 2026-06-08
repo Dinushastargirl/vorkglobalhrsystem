@@ -162,7 +162,7 @@ export default function Employees() {
           </button>
           <button 
             onClick={() => { setEditingEmp(null); setIsModalOpen(true); }}
-            className="bg-orange-500 text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 hover:bg-orange-600 transition-all shadow-lg shadow-orange-100"
+            className="bg-blue-600 text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 hover:bg-blue-700 transition-all shadow-lg shadow-blue-100"
           >
             <UserPlus size={18} />
             Add Employee
@@ -179,14 +179,14 @@ export default function Employees() {
             placeholder="Search by name, email, or username..." 
             value={search}
             onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
-            className="w-full pl-12 pr-4 py-3 bg-zinc-50 border border-zinc-100 rounded-2xl text-sm focus:ring-2 focus:ring-orange-500 outline-none transition-all"
+            className="w-full pl-12 pr-4 py-3 bg-zinc-50 border border-zinc-100 rounded-2xl text-sm focus:ring-2 focus:ring-blue-600 outline-none transition-all"
           />
         </div>
         <div className="flex gap-2">
           <select 
             value={filterBranch}
             onChange={(e) => { setFilterBranch(e.target.value); setCurrentPage(1); }}
-            className="px-4 py-3 bg-zinc-50 border border-zinc-100 rounded-2xl text-sm font-bold text-zinc-600 outline-none focus:ring-2 focus:ring-orange-500"
+            className="px-4 py-3 bg-zinc-50 border border-zinc-100 rounded-2xl text-sm font-bold text-zinc-600 outline-none focus:ring-2 focus:ring-blue-600"
           >
             {branches.map(b => <option key={b} value={b}>{b}</option>)}
           </select>
@@ -212,9 +212,10 @@ export default function Employees() {
                 <th className="px-6 py-4 text-[10px] font-black text-zinc-400 uppercase tracking-widest text-right">Intensive</th>
                 <th className="px-6 py-4 text-[10px] font-black text-zinc-400 uppercase tracking-widest text-right">Travelling</th>
                 <th className="px-6 py-4 text-[10px] font-black text-zinc-400 uppercase tracking-widest text-right text-green-600">Extra Days</th>
-                <th className="px-6 py-4 text-[10px] font-black text-zinc-400 uppercase tracking-widest text-right text-orange-500">Net Salary</th>
+                <th className="px-6 py-4 text-[10px] font-black text-zinc-400 uppercase tracking-widest text-right text-blue-600">Net Salary</th>
                 <th className="px-6 py-4 text-[10px] font-black text-zinc-400 uppercase tracking-widest text-center">Username</th>
                 <th className="px-6 py-4 text-[10px] font-black text-zinc-400 uppercase tracking-widest text-center">Role</th>
+                <th className="px-6 py-4 text-[10px] font-black text-zinc-400 uppercase tracking-widest text-center">Skills</th>
                 <th className="px-6 py-4 text-[10px] font-black text-zinc-400 uppercase tracking-widest text-center">Actions</th>
               </tr>
             </thead>
@@ -226,7 +227,7 @@ export default function Employees() {
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center text-orange-600 font-black text-xs">
+                      <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-700 font-black text-xs">
                         {emp.name.charAt(0)}
                       </div>
                       <span className="text-sm font-black text-zinc-900">{emp.name}</span>
@@ -240,24 +241,42 @@ export default function Employees() {
                   <td className="px-6 py-4 text-xs font-bold text-green-600 text-right">{emp.intensive.toLocaleString()}</td>
                   <td className="px-6 py-4 text-xs font-bold text-green-600 text-right">{emp.travelling.toLocaleString()}</td>
                   <td className="px-6 py-4 text-xs font-bold text-green-600 text-right">{emp.extraDays || 0}</td>
-                  <td className="px-6 py-4 text-sm font-black text-orange-600 text-right bg-orange-50/30">{emp.net.toLocaleString()}</td>
+                  <td className="px-6 py-4 text-sm font-black text-blue-700 text-right bg-blue-50/30">{emp.net.toLocaleString()}</td>
                   <td className="px-6 py-4 text-xs font-medium text-zinc-500 text-center">{emp.username}</td>
                   <td className="px-6 py-4">
                     <span className={cn(
                       "text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-lg",
                       emp.role === 'super' ? 'bg-purple-100 text-purple-600' :
                       emp.role === 'owner' ? 'bg-blue-100 text-blue-600' :
-                      emp.role === 'hr' ? 'bg-orange-100 text-orange-600' :
+                      emp.role === 'hr' ? 'bg-blue-100 text-blue-700' :
                       'bg-zinc-100 text-zinc-500'
                     )}>
                       {emp.role}
                     </span>
                   </td>
+                  <td className="px-6 py-4 text-center">
+                    {emp.skills && emp.skills.length > 0 ? (
+                      <div className="flex flex-wrap gap-1 justify-center max-w-[120px]">
+                        {emp.skills.slice(0, 2).map((skill, idx) => (
+                          <span key={idx} className="text-[9px] font-bold text-green-700 bg-green-50 px-1.5 py-0.5 rounded border border-green-100 truncate max-w-[60px]" title={skill}>
+                            {skill}
+                          </span>
+                        ))}
+                        {emp.skills.length > 2 && (
+                          <span className="text-[9px] font-bold text-zinc-500 bg-zinc-100 px-1.5 py-0.5 rounded border border-zinc-200">
+                            +{emp.skills.length - 2}
+                          </span>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-xs text-zinc-400">—</span>
+                    )}
+                  </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center justify-center gap-2">
                       <button 
                         onClick={() => { setEditingEmp(emp); setIsModalOpen(true); }}
-                        className="p-2 text-zinc-400 hover:text-orange-600 hover:bg-orange-50 rounded-xl transition-all"
+                        className="p-2 text-zinc-400 hover:text-blue-700 hover:bg-blue-50 rounded-xl transition-all"
                         title="Edit Employee"
                       >
                         <Edit2 size={16} />
@@ -419,24 +438,24 @@ export default function Employees() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   {/* Basic Info */}
                   <div className="space-y-6">
-                    <h3 className="text-sm font-black text-zinc-900 border-l-4 border-orange-500 pl-3">Basic Information</h3>
+                    <h3 className="text-sm font-black text-zinc-900 border-l-4 border-blue-600 pl-3">Basic Information</h3>
                     <div className="space-y-4">
                       <div className="space-y-2">
                         <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-1">Full Name</label>
-                        <input name="name" defaultValue={editingEmp?.name} required className="w-full px-5 py-3 bg-zinc-50 border border-zinc-100 rounded-2xl text-sm font-medium focus:ring-2 focus:ring-orange-500 outline-none" />
+                        <input name="name" defaultValue={editingEmp?.name} required className="w-full px-5 py-3 bg-zinc-50 border border-zinc-100 rounded-2xl text-sm font-medium focus:ring-2 focus:ring-blue-600 outline-none" />
                       </div>
                       <div className="space-y-2">
                         <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-1">Email Address</label>
-                        <input name="email" type="email" defaultValue={editingEmp?.email} required className="w-full px-5 py-3 bg-zinc-50 border border-zinc-100 rounded-2xl text-sm font-medium focus:ring-2 focus:ring-orange-500 outline-none" />
+                        <input name="email" type="email" defaultValue={editingEmp?.email} required className="w-full px-5 py-3 bg-zinc-50 border border-zinc-100 rounded-2xl text-sm font-medium focus:ring-2 focus:ring-blue-600 outline-none" />
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-1">Branch</label>
-                          <input name="branch" defaultValue={editingEmp?.branch} required className="w-full px-5 py-3 bg-zinc-50 border border-zinc-100 rounded-2xl text-sm font-medium focus:ring-2 focus:ring-orange-500 outline-none" />
+                          <input name="branch" defaultValue={editingEmp?.branch} required className="w-full px-5 py-3 bg-zinc-50 border border-zinc-100 rounded-2xl text-sm font-medium focus:ring-2 focus:ring-blue-600 outline-none" />
                         </div>
                         <div className="space-y-2">
                           <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-1">Join Date</label>
-                          <input name="joinDate" type="date" defaultValue={editingEmp?.joinDate} required className="w-full px-5 py-3 bg-zinc-50 border border-zinc-100 rounded-2xl text-sm font-medium focus:ring-2 focus:ring-orange-500 outline-none" />
+                          <input name="joinDate" type="date" defaultValue={editingEmp?.joinDate} required className="w-full px-5 py-3 bg-zinc-50 border border-zinc-100 rounded-2xl text-sm font-medium focus:ring-2 focus:ring-blue-600 outline-none" />
                         </div>
                       </div>
                       <div className="space-y-2">
@@ -511,7 +530,7 @@ export default function Employees() {
                             className={cn(
                               "w-full px-5 py-3 border border-zinc-100 rounded-2xl text-sm font-bold outline-none transition-all",
                               editingEmp?.name === 'Dilini Sanarathna' 
-                                ? "bg-zinc-50 focus:ring-2 focus:ring-orange-500 text-zinc-900" 
+                                ? "bg-zinc-50 focus:ring-2 focus:ring-blue-600 text-zinc-900" 
                                 : "bg-zinc-100 text-zinc-500 cursor-not-allowed"
                             )} 
                           />
@@ -623,7 +642,7 @@ export default function Employees() {
                             defaultValue={editingEmp?.net || 0} 
                             required 
                             readOnly
-                            className="w-full px-5 py-3 bg-zinc-100 border border-zinc-100 rounded-2xl text-sm font-black text-zinc-900 focus:ring-2 focus:ring-orange-500 outline-none" 
+                            className="w-full px-5 py-3 bg-zinc-100 border border-zinc-100 rounded-2xl text-sm font-black text-zinc-900 focus:ring-2 focus:ring-blue-600 outline-none" 
                           />
                         </div>
                       </div>
@@ -707,7 +726,7 @@ export default function Employees() {
                         required 
                         autoFocus
                         placeholder="Enter amount..."
-                        className="w-full pl-12 pr-5 py-4 bg-zinc-50 border border-zinc-100 rounded-2xl text-sm font-black focus:ring-2 focus:ring-orange-500 outline-none" 
+                        className="w-full pl-12 pr-5 py-4 bg-zinc-50 border border-zinc-100 rounded-2xl text-sm font-black focus:ring-2 focus:ring-blue-600 outline-none" 
                       />
                     </div>
                   </div>

@@ -1,12 +1,15 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { 
   User, Mail, Shield, LogOut, Edit3,
-  Phone, X, Camera, CreditCard, Award, MapPin
+  Phone, X, Camera, CreditCard, Award, MapPin,
+  Code, FileText, DownloadCloud, Briefcase
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { cn, formatDate } from '../lib/utils';
 import * as userService from '../services/userService';
 import { toast } from 'sonner';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 export default function Profile() {
   const { user, logout, updateUser } = useAuth();
@@ -24,6 +27,7 @@ export default function Profile() {
     bankBranch: '',
     accountNo: '',
     accountHolderName: '',
+    skills: '',
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
@@ -43,6 +47,7 @@ export default function Profile() {
         bankBranch: user.bankBranch || '',
         accountNo: user.accountNo || '',
         accountHolderName: user.accountHolderName || user.name || '',
+        skills: user.skills?.join(', ') || '',
       });
     }
   }, [isEditing, user]);
@@ -100,6 +105,7 @@ export default function Profile() {
         bankBranch: isEligibleBank ? formData.bankBranch.trim() : user.bankBranch,
         accountNo: isEligibleBank ? formData.accountNo.trim() : user.accountNo,
         accountHolderName: isEligibleBank ? (formData.accountHolderName.trim() || fullName) : user.accountHolderName,
+        skills: formData.skills.split(',').map(s => s.trim()).filter(Boolean),
       };
       
       await userService.saveEmployee(updatedUser);
@@ -113,6 +119,52 @@ export default function Profile() {
       toast.dismiss();
       toast.error('Failed to save profile changes');
     }
+  };
+
+  const handleDownloadPayslip = () => {
+    if (!user) return;
+    const doc = new jsPDF();
+    const currentDate = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    
+    // Header
+    doc.setFontSize(22);
+    doc.setTextColor(37, 99, 235);
+    doc.text('HR PULSE', 14, 20);
+    
+    doc.setFontSize(14);
+    doc.setTextColor(50, 50, 50);
+    doc.text(`Payslip for ${currentDate}`, 14, 30);
+    
+    // Employee Details
+    doc.setFontSize(11);
+    doc.text(`Employee Name: ${user.name}`, 14, 45);
+    doc.text(`Role: ${user.role.toUpperCase()}`, 14, 52);
+    doc.text(`Branch: ${user.branch}`, 14, 59);
+
+    // Earnings & Deductions Table
+    const tableData = [
+      ['Basic Salary (Salary A)', `LKR ${user.salaryA.toLocaleString()}`],
+      ['EPF Deduction (8%)', `-LKR ${user.epf.toLocaleString()}`],
+      ['Advances/Loans', `-LKR ${user.advances.toLocaleString()}`],
+      ['Net Payable', `LKR ${user.net.toLocaleString()}`],
+    ];
+
+    (doc as any).autoTable({
+      startY: 70,
+      head: [['Description', 'Amount']],
+      body: tableData,
+      theme: 'grid',
+      headStyles: { fillColor: [37, 99, 235] },
+      alternateRowStyles: { fillColor: [248, 250, 252] },
+    });
+
+    // Footer
+    const finalY = (doc as any).lastAutoTable.finalY || 120;
+    doc.setFontSize(10);
+    doc.setTextColor(150, 150, 150);
+    doc.text('This is a computer generated document. No signature is required.', 14, finalY + 20);
+
+    doc.save(`Payslip_${user.name.replace(/\s+/g, '_')}_${currentDate}.pdf`);
   };
 
   const statusColors = {
@@ -137,7 +189,7 @@ export default function Profile() {
         </div>
         <button 
           onClick={() => setIsEditing(true)}
-          className="flex items-center gap-2 px-6 py-3 bg-orange-500 text-white rounded-2xl font-bold hover:bg-orange-600 transition-all shadow-lg shadow-orange-100"
+          className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-100"
         >
           <Edit3 size={18} />
           Edit Profile
@@ -304,6 +356,88 @@ export default function Profile() {
               )}
             </div>
           )}
+
+          {/* Salary & Payslips */}
+          <div className="bg-white p-8 rounded-[2.5rem] border border-zinc-100 shadow-sm relative overflow-hidden">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-black text-zinc-900 flex items-center gap-2">
+                <CreditCard size={22} className="text-emerald-500" />
+                Salary & Payslips
+              </h3>
+            </div>
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-6 bg-emerald-50 rounded-2xl border border-emerald-100">
+              <div>
+                <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Current Net Salary</p>
+                <p className="text-2xl font-black text-emerald-900 mt-1">LKR {user.net?.toLocaleString() || 0}</p>
+              </div>
+              <button 
+                onClick={handleDownloadPayslip}
+                className="flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-all shadow-md shadow-emerald-200"
+              >
+                <DownloadCloud size={18} />
+                Download Payslip
+              </button>
+            </div>
+          </div>
+
+          {/* Tech Stack & Skills */}
+          <div className="bg-white p-8 rounded-[2.5rem] border border-zinc-100 shadow-sm relative overflow-hidden">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-black text-zinc-900 flex items-center gap-2">
+                <Code size={22} className="text-green-500" />
+                Tech Stack & Skills
+              </h3>
+            </div>
+            {user.skills && user.skills.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {user.skills.map((skill, idx) => (
+                  <span key={idx} className="px-4 py-2 bg-green-50 text-green-700 rounded-xl text-xs font-bold border border-green-100 uppercase tracking-widest">
+                    {skill}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <div className="py-6 text-center bg-zinc-50/50 border border-dashed border-zinc-200 rounded-[2rem] flex flex-col items-center justify-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-green-50 flex items-center justify-center text-green-400">
+                  <Code size={24} />
+                </div>
+                <div>
+                  <p className="font-bold text-zinc-700 text-sm">No tech skills documented</p>
+                  <p className="text-xs text-zinc-400 mt-0.5">Edit profile to add your technical proficiency.</p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Document Locker */}
+          <div className="bg-white p-8 rounded-[2.5rem] border border-zinc-100 shadow-sm relative overflow-hidden">
+            <h3 className="text-xl font-black text-zinc-900 mb-6 flex items-center gap-2">
+              <FileText size={22} className="text-blue-600" />
+              Document Locker
+            </h3>
+            <div className="space-y-3">
+              {[
+                { name: 'Employment Contract', date: 'Jan 2026', type: 'PDF' },
+                { name: 'NDA Agreement', date: 'Jan 2026', type: 'PDF' },
+                { name: 'Performance Review 2025', date: 'Dec 2025', type: 'PDF' }
+              ].map((doc, idx) => (
+                <div key={idx} className="flex items-center justify-between p-4 bg-zinc-50 rounded-2xl border border-zinc-100 hover:border-blue-200 transition-colors cursor-pointer group">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center text-blue-700">
+                      <FileText size={18} />
+                    </div>
+                    <div>
+                      <p className="font-bold text-zinc-700 text-sm group-hover:text-blue-700 transition-colors">{doc.name}</p>
+                      <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mt-0.5">{doc.date} • {doc.type}</p>
+                    </div>
+                  </div>
+                  <button className="p-2 text-zinc-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all">
+                    <DownloadCloud size={18} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -315,7 +449,7 @@ export default function Profile() {
             <div className="p-8 pb-4 flex items-start justify-between border-b border-zinc-100">
               <div>
                 <h2 className="text-xl font-black text-zinc-900 flex items-center gap-2">
-                  <Edit3 size={20} className="text-orange-500" />
+                  <Edit3 size={20} className="text-blue-600" />
                   Edit Profile Information
                 </h2>
                 <p className="text-xs text-zinc-500 font-medium mt-1">Modify your identity and bank details. Click save to submit.</p>
@@ -329,18 +463,18 @@ export default function Profile() {
               {/* Avatar Picker Section */}
               <div className="flex flex-col items-center pb-4">
                 <div className="relative group">
-                  <div className="w-24 h-24 rounded-[1.8rem] bg-orange-50 border-2 border-dashed border-orange-200 flex items-center justify-center overflow-hidden">
+                  <div className="w-24 h-24 rounded-[1.8rem] bg-blue-50 border-2 border-dashed border-blue-200 flex items-center justify-center overflow-hidden">
                     {formData.photoUrl ? (
                       <img src={formData.photoUrl} className="w-full h-full object-cover" />
                     ) : (
-                      <span className="text-3xl font-black text-orange-600 uppercase">
+                      <span className="text-3xl font-black text-blue-700 uppercase">
                         {formData.firstName.charAt(0)}{formData.lastName ? formData.lastName.charAt(0) : '?'}
                       </span>
                     )}
                   </div>
                   <button 
                     onClick={handlePhotoClick}
-                    className="absolute bottom-0 right-0 p-2 bg-orange-500 text-white rounded-full shadow-lg hover:bg-orange-600 transition-all border-4 border-white"
+                    className="absolute bottom-0 right-0 p-2 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-all border-4 border-white"
                   >
                     <Camera size={14} />
                   </button>
@@ -363,7 +497,7 @@ export default function Profile() {
                       type="text"
                       value={formData.firstName}
                       onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
-                      className="w-full px-5 py-3.5 bg-zinc-50 rounded-2xl text-sm font-bold text-zinc-700 border border-zinc-100 focus:ring-2 focus:ring-orange-500 outline-none transition-all placeholder:text-zinc-300"
+                      className="w-full px-5 py-3.5 bg-zinc-50 rounded-2xl text-sm font-bold text-zinc-700 border border-zinc-100 focus:ring-2 focus:ring-blue-600 outline-none transition-all placeholder:text-zinc-300"
                       placeholder="e.g. John"
                     />
                   </div>
@@ -373,7 +507,7 @@ export default function Profile() {
                       type="text"
                       value={formData.lastName}
                       onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
-                      className="w-full px-5 py-3.5 bg-zinc-50 rounded-2xl text-sm font-bold text-zinc-700 border border-zinc-100 focus:ring-2 focus:ring-orange-500 outline-none transition-all placeholder:text-zinc-300"
+                      className="w-full px-5 py-3.5 bg-zinc-50 rounded-2xl text-sm font-bold text-zinc-700 border border-zinc-100 focus:ring-2 focus:ring-blue-600 outline-none transition-all placeholder:text-zinc-300"
                       placeholder="e.g. Doe"
                     />
                   </div>
@@ -386,7 +520,7 @@ export default function Profile() {
                       type="text"
                       value={formData.nickname}
                       onChange={(e) => setFormData(prev => ({ ...prev, nickname: e.target.value }))}
-                      className="w-full px-5 py-3.5 bg-zinc-50 rounded-2xl text-sm font-bold text-zinc-700 border border-zinc-100 focus:ring-2 focus:ring-orange-500 outline-none transition-all placeholder:text-zinc-300"
+                      className="w-full px-5 py-3.5 bg-zinc-50 rounded-2xl text-sm font-bold text-zinc-700 border border-zinc-100 focus:ring-2 focus:ring-blue-600 outline-none transition-all placeholder:text-zinc-300"
                       placeholder="e.g. Johnny"
                     />
                   </div>
@@ -396,7 +530,7 @@ export default function Profile() {
                       type="text"
                       value={formData.nic}
                       onChange={(e) => setFormData(prev => ({ ...prev, nic: e.target.value }))}
-                      className="w-full px-5 py-3.5 bg-zinc-50 rounded-2xl text-sm font-bold text-zinc-700 border border-zinc-100 focus:ring-2 focus:ring-orange-500 outline-none transition-all placeholder:text-zinc-300 font-mono"
+                      className="w-full px-5 py-3.5 bg-zinc-50 rounded-2xl text-sm font-bold text-zinc-700 border border-zinc-100 focus:ring-2 focus:ring-blue-600 outline-none transition-all placeholder:text-zinc-300 font-mono"
                       placeholder="e.g. 199512345V"
                     />
                   </div>
@@ -418,7 +552,7 @@ export default function Profile() {
                       type="text"
                       value={formData.phone}
                       onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-                      className="w-full px-5 py-3.5 bg-zinc-50 rounded-2xl text-sm font-bold text-zinc-700 border border-zinc-100 focus:ring-2 focus:ring-orange-500 outline-none transition-all"
+                      className="w-full px-5 py-3.5 bg-zinc-50 rounded-2xl text-sm font-bold text-zinc-700 border border-zinc-100 focus:ring-2 focus:ring-blue-600 outline-none transition-all"
                       placeholder="e.g. 077 123 4567"
                     />
                   </div>
@@ -480,6 +614,25 @@ export default function Profile() {
                   </div>
                 </div>
               )}
+
+              {/* SECTION 3: ICT Skills */}
+              <div className="space-y-6 pt-4">
+                <h4 className="text-xs font-black uppercase text-zinc-400 tracking-widest border-b border-zinc-100 pb-2 flex items-center gap-2">
+                  <Code size={14} className="text-green-500" />
+                  Tech Stack & Skills
+                </h4>
+                
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-zinc-700 uppercase tracking-widest ml-1">Skills (Comma separated)</label>
+                  <input 
+                    type="text"
+                    value={formData.skills}
+                    onChange={(e) => setFormData(prev => ({ ...prev, skills: e.target.value }))}
+                    className="w-full px-5 py-3.5 bg-zinc-50 rounded-2xl text-sm font-bold text-zinc-700 border border-zinc-100 focus:ring-2 focus:ring-green-500 outline-none transition-all placeholder:text-zinc-300"
+                    placeholder="e.g. React, Node.js, AWS, Python"
+                  />
+                </div>
+              </div>
             </div>
 
             {/* Modal Actions */}
@@ -492,7 +645,7 @@ export default function Profile() {
               </button>
               <button 
                 onClick={handleSave}
-                className="px-8 py-3.5 bg-orange-500 text-white rounded-2xl font-bold hover:bg-orange-600 transition-all shadow-lg shadow-orange-100 active:scale-95"
+                className="px-8 py-3.5 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-100 active:scale-95"
               >
                 Save Changes
               </button>
