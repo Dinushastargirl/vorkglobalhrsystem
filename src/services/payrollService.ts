@@ -40,7 +40,7 @@ export async function generatePayroll(month: number, year: number): Promise<void
   const payroll = getStoredPayroll();
 
   for (const emp of employees) {
-    if (['super', 'owner'].includes(emp.role)) continue;
+    if (emp.role === 'owner' || emp.name === 'Super Admin') continue;
 
     const exists = payroll.find(p => p.userId === emp.uid && p.month === month && p.year === year);
     if (!exists) {

@@ -62,7 +62,7 @@ export default function ManagePayroll() {
       const matchesBranch = filterBranch === 'All Branches' || 
                            emp.branch?.toLowerCase() === filterBranch.toLowerCase();
       // 3. Skip admins/owners for payroll management
-      const isManageable = emp.role !== 'owner' && emp.role !== 'super';
+      const isManageable = emp.role !== 'owner' && emp.name !== 'Super Admin';
       
       return matchesSearch && matchesBranch && isManageable;
     })

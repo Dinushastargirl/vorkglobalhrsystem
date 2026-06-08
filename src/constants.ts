@@ -1,7 +1,7 @@
 import { UserProfile, Holiday } from './types';
 
 export const MOCK_EMPLOYEES_DATA = [
-  { branch: 'Headquarters', name: 'Super Admin', email: 'superadmin@gmail.com', username: 'superadmin', role: 'super', salaryA: 150000, salaryB: 0, epf: 12000, advances: 0, cover: 0, intensive: 0, travelling: 0, net: 138000, joinDate: '2026-01-01' },
+  { branch: 'Headquarters', name: 'Super Admin', email: 'superadmin@gmail.com', username: 'superadmin', role: 'super', salaryA: 0, salaryB: 0, epf: 0, advances: 0, cover: 0, intensive: 0, travelling: 0, net: 0, joinDate: '2026-01-01' },
   { branch: 'Colombo', name: 'Dinusha Pushparajah', email: 'dinushushapushparajah@gmail.com', username: 'dinusha', role: 'super', salaryA: 80000, salaryB: 0, epf: 6400, advances: 0, cover: 0, intensive: 0, travelling: 0, net: 73600, joinDate: '2026-02-15' },
   { branch: 'Kandy', name: 'Janani Saijanani', email: 'jananisaijanani9@gmail.com', username: 'janani', role: 'employee', salaryA: 50000, salaryB: 0, epf: 4000, advances: 0, cover: 0, intensive: 0, travelling: 0, net: 46000, joinDate: '2026-03-10' },
   { branch: 'Galle', name: 'Nisal Sayuranga', email: 'nisalsayuranga0710@gmail.com', username: 'nisal', role: 'employee', salaryA: 50000, salaryB: 0, epf: 4000, advances: 0, cover: 0, intensive: 0, travelling: 0, net: 46000, joinDate: '2026-04-01' },

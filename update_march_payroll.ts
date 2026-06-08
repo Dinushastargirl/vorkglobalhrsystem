@@ -14,7 +14,6 @@ if (!supabaseUrl || !serviceRoleKey) {
 const supabase = createClient(supabaseUrl, serviceRoleKey);
 
 const employeeData = [
-  { branch: "Headquarters", name: "Super Admin", start: "1/1/2026", salaryA: 150000, epf: 12000, advances: 0, cover: 0, intensive: 0, travelling: 0 },
   { branch: "Colombo", name: "Dinusha Pushparajah", start: "2/15/2026", salaryA: 80000, epf: 6400, advances: 0, cover: 0, intensive: 0, travelling: 0 },
   { branch: "Kandy", name: "Janani Saijanani", start: "3/10/2026", salaryA: 50000, epf: 4000, advances: 0, cover: 0, intensive: 0, travelling: 0 },
   { branch: "Galle", name: "Nisal Sayuranga", start: "4/1/2026", salaryA: 50000, epf: 4000, advances: 0, cover: 0, intensive: 0, travelling: 0 },

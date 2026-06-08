@@ -358,27 +358,29 @@ export default function Profile() {
           )}
 
           {/* Salary & Payslips */}
-          <div className="bg-white p-8 rounded-[2.5rem] border border-zinc-100 shadow-sm relative overflow-hidden">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-black text-zinc-900 flex items-center gap-2">
-                <CreditCard size={22} className="text-emerald-500" />
-                Salary & Payslips
-              </h3>
-            </div>
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-6 bg-emerald-50 rounded-2xl border border-emerald-100">
-              <div>
-                <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Current Net Salary</p>
-                <p className="text-2xl font-black text-emerald-900 mt-1">LKR {user.net?.toLocaleString() || 0}</p>
+          {user.name !== 'Super Admin' && (
+            <div className="bg-white p-8 rounded-[2.5rem] border border-zinc-100 shadow-sm relative overflow-hidden">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-black text-zinc-900 flex items-center gap-2">
+                  <CreditCard size={22} className="text-emerald-500" />
+                  Salary & Payslips
+                </h3>
               </div>
-              <button 
-                onClick={handleDownloadPayslip}
-                className="flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-all shadow-md shadow-emerald-200"
-              >
-                <DownloadCloud size={18} />
-                Download Payslip
-              </button>
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-6 bg-emerald-50 rounded-2xl border border-emerald-100">
+                <div>
+                  <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Current Net Salary</p>
+                  <p className="text-2xl font-black text-emerald-900 mt-1">LKR {user.net?.toLocaleString() || 0}</p>
+                </div>
+                <button 
+                  onClick={handleDownloadPayslip}
+                  className="flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-all shadow-md shadow-emerald-200"
+                >
+                  <DownloadCloud size={18} />
+                  Download Payslip
+                </button>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Tech Stack & Skills */}
           <div className="bg-white p-8 rounded-[2.5rem] border border-zinc-100 shadow-sm relative overflow-hidden">
