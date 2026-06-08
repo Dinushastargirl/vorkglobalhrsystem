@@ -164,3 +164,12 @@ export async function uploadAvatar(uid: string, file: File): Promise<string> {
     reader.readAsDataURL(file);
   });
 }
+
+export async function addPerformancePoints(uid: string, points: number): Promise<void> {
+  const emps = getStoredEmployees();
+  const index = emps.findIndex(e => e.uid === uid);
+  if (index > -1) {
+    emps[index].performanceScore = (emps[index].performanceScore || 0) + points;
+    saveStoredEmployees(emps);
+  }
+}

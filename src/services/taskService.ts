@@ -232,17 +232,31 @@ export async function saveTask(task: Partial<Task>): Promise<void> {
   saveStoredTasks(tasks);
 }
 
-export async function updateTaskStatus(id: string, status: TaskStatus, progressPercent?: number): Promise<void> {
+export async function updateTaskStatus(id: string, status: TaskStatus, progressPercent?: number): Promise<boolean> {
   const tasks = getStoredTasks();
   const index = tasks.findIndex(t => t.id === id);
+  let awardedPoints = false;
+
   if (index > -1) {
-    tasks[index].status = status;
-    if (progressPercent !== undefined) {
-      tasks[index].progressPercent = progressPercent;
+    const task = tasks[index];
+    
+    // Gamification: if completing before or on deadline
+    if (status === 'Completed' && task.status !== 'Completed') {
+      const today = new Date().toISOString().split('T')[0];
+      if (today <= task.deadline) {
+        await userService.addPerformancePoints(task.assignedTo, 3);
+        awardedPoints = true;
+      }
     }
-    tasks[index].updatedAt = new Date().toISOString();
+
+    task.status = status;
+    if (progressPercent !== undefined) {
+      task.progressPercent = progressPercent;
+    }
+    task.updatedAt = new Date().toISOString();
     saveStoredTasks(tasks);
   }
+  return awardedPoints;
 }
 
 export async function addComment(taskId: string, comment: Omit<TaskComment, 'id' | 'createdAt'>): Promise<void> {

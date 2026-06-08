@@ -8,8 +8,6 @@ import {
 import { Task, UserProfile, TaskPriority, TaskStatus } from '../types';
 import { cn, formatDate } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
 
 import { useAuth } from '../hooks/useAuth';
 import * as taskService from '../services/taskService';
@@ -23,6 +21,8 @@ export default function Tasks() {
   
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<'All' | TaskStatus>('All');
+  const [activeTab, setActiveTab] = useState<'my_tasks' | 'all_tasks'>('my_tasks');
+  const [tempProgress, setTempProgress] = useState(0);
   
   // Modal states
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -55,6 +55,12 @@ export default function Tasks() {
   useEffect(() => {
     loadData();
   }, [uid, isAdmin]);
+
+  useEffect(() => {
+    if (viewTask) {
+      setTempProgress(viewTask.progressPercent || 0);
+    }
+  }, [viewTask?.id, viewTask?.progressPercent]);
 
   const handleSaveTask = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -111,8 +117,13 @@ export default function Tasks() {
 
   const updateStatus = async (id: string, status: TaskStatus, progress?: number) => {
     try {
-      await taskService.updateTaskStatus(id, status, progress);
+      const awardedPoints = await taskService.updateTaskStatus(id, status, progress);
       loadData();
+      if (awardedPoints) {
+        toast.success('🎉 Task completed! You earned 3 Performance Points!');
+      } else {
+        toast.success(`Task status updated to ${status}`);
+      }
       if(viewTask?.id === id) {
         setViewTask(prev => prev ? {...prev, status, progressPercent: progress ?? prev.progressPercent} : null);
       }
@@ -121,7 +132,22 @@ export default function Tasks() {
     }
   };
 
+  const handleUpdateProgress = async () => {
+    if (!viewTask?.id) return;
+    try {
+      await taskService.updateTaskStatus(viewTask.id, viewTask.status, tempProgress);
+      toast.success('Progress updated!');
+      loadData();
+      setViewTask(prev => prev ? {...prev, progressPercent: tempProgress} : null);
+    } catch (e) {
+      toast.error('Failed to update progress');
+    }
+  };
+
   const filteredTasks = tasks.filter(task => {
+    if (isAdmin && activeTab === 'my_tasks' && task.assignedTo !== uid) return false;
+    if (!isAdmin && task.assignedTo !== uid) return false;
+
     const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = filterStatus === 'All' ? true : task.status === filterStatus;
     return matchesSearch && matchesStatus;
@@ -157,23 +183,49 @@ export default function Tasks() {
           <h1 className="text-3xl font-black text-zinc-900">Task Management</h1>
           <p className="text-zinc-500 font-medium">Professional project and task tracking</p>
         </div>
-        <button
-          onClick={() => {
-            setEditingTask({
-              title: '', description: '', assignedTo: uid || '', assignedBy: uid || '',
-              priority: 'Medium', status: 'Not Started', progressPercent: 0,
-              startDate: new Date().toISOString().split('T')[0],
-              deadline: new Date().toISOString().split('T')[0],
-              estimatedHours: 0
-            });
-            setIsModalOpen(true);
-          }}
-          className="bg-blue-600 text-white px-8 py-4 rounded-2xl font-black flex items-center gap-2 hover:bg-blue-700 transition-all shadow-xl shadow-blue-100"
-        >
-          <Plus size={20} />
-          Create Task
-        </button>
+        {isAdmin && (
+          <button
+            onClick={() => {
+              setEditingTask({
+                title: '', description: '', assignedTo: uid || '', assignedBy: uid || '',
+                priority: 'Medium', status: 'Not Started', progressPercent: 0,
+                startDate: new Date().toISOString().split('T')[0],
+                deadline: new Date().toISOString().split('T')[0],
+                estimatedHours: 0
+              });
+              setIsModalOpen(true);
+            }}
+            className="bg-blue-600 text-white px-8 py-4 rounded-2xl font-black flex items-center gap-2 hover:bg-blue-700 transition-all shadow-xl shadow-blue-100"
+          >
+            <Plus size={20} />
+            Create Task
+          </button>
+        )}
       </div>
+
+      {/* Tabs for Admins */}
+      {isAdmin && (
+        <div className="flex gap-4 border-b border-zinc-100 pb-px">
+          <button
+            onClick={() => setActiveTab('my_tasks')}
+            className={cn(
+              "px-6 py-3 font-bold text-sm border-b-2 transition-all",
+              activeTab === 'my_tasks' ? "border-zinc-900 text-zinc-900" : "border-transparent text-zinc-400 hover:text-zinc-600"
+            )}
+          >
+            My Tasks
+          </button>
+          <button
+            onClick={() => setActiveTab('all_tasks')}
+            className={cn(
+              "px-6 py-3 font-bold text-sm border-b-2 transition-all",
+              activeTab === 'all_tasks' ? "border-zinc-900 text-zinc-900" : "border-transparent text-zinc-400 hover:text-zinc-600"
+            )}
+          >
+            All Employees Tasks
+          </button>
+        </div>
+      )}
 
       {/* Filters */}
       <div className="bg-white p-4 rounded-4xl border border-zinc-100 shadow-sm flex flex-col md:flex-row gap-4">
@@ -267,20 +319,22 @@ export default function Tasks() {
                       </div>
                     </td>
                     <td className="p-6 text-right">
-                      <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); setEditingTask(task); setIsModalOpen(true); }}
-                          className="p-2 text-zinc-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                        >
-                          <Edit3 size={18} />
-                        </button>
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); deleteTask(task.id!); }}
-                          className="p-2 text-zinc-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      </div>
+                      {isAdmin && activeTab === 'all_tasks' && (
+                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); setEditingTask(task); setIsModalOpen(true); }}
+                            className="p-2 text-zinc-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          >
+                            <Edit3 size={18} />
+                          </button>
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); deleteTask(task.id!); }}
+                            className="p-2 text-zinc-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 ))
@@ -329,14 +383,12 @@ export default function Tasks() {
                     
                     <div>
                       <label className="block text-xs font-black text-zinc-500 uppercase tracking-widest mb-2 ml-1">Description</label>
-                      <div className="border border-zinc-100 rounded-2xl overflow-hidden bg-zinc-50 pb-12">
-                        <ReactQuill 
-                          theme="snow"
-                          value={editingTask.description}
-                          onChange={(content) => setEditingTask({...editingTask, description: content})}
-                          className="h-48 border-none"
-                        />
-                      </div>
+                      <textarea
+                        value={editingTask.description}
+                        onChange={(e) => setEditingTask({...editingTask, description: e.target.value})}
+                        className="w-full px-5 py-4 bg-zinc-50 border border-zinc-100 rounded-2xl text-sm focus:ring-2 focus:ring-blue-600 outline-none transition-all font-medium h-48 resize-none"
+                        placeholder="Enter task details..."
+                      />
                     </div>
                   </div>
 
@@ -499,23 +551,45 @@ export default function Tasks() {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {viewTask.status !== 'Completed' && (
                     <button onClick={() => updateStatus(viewTask.id!, 'Completed', 100)} className="p-4 bg-green-50 hover:bg-green-100 text-green-700 border border-green-200 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all">
                       <CheckCircle2 size={18} /> Mark as Completed
                     </button>
                   )}
-                  {viewTask.status === 'Not Started' && (
+                  {viewTask.status === 'Not Started' && viewTask.assignedTo === uid && (
                     <button onClick={() => updateStatus(viewTask.id!, 'In Progress', 10)} className="p-4 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all">
                       <Clock size={18} /> Start Progress
                     </button>
                   )}
-                  {viewTask.status === 'In Progress' && (
-                    <button onClick={() => updateStatus(viewTask.id!, 'Pending Review', 95)} className="p-4 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all">
+                  {viewTask.status === 'In Progress' && viewTask.assignedTo === uid && (
+                    <button onClick={() => updateStatus(viewTask.id!, 'Pending Review', viewTask.progressPercent)} className="p-4 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all">
                       <MoreVertical size={18} /> Request Review
                     </button>
                   )}
                 </div>
+
+                {viewTask.status === 'In Progress' && viewTask.assignedTo === uid && (
+                  <div className="flex items-center gap-4 p-5 bg-blue-50/50 rounded-3xl border border-blue-100 mt-4">
+                    <div className="flex-1">
+                      <label className="text-xs font-black text-blue-800 uppercase tracking-widest mb-3 block">Daily Progress Update (%)</label>
+                      <input 
+                        type="range" min="0" max="100" step="5"
+                        value={tempProgress} 
+                        onChange={e => setTempProgress(Number(e.target.value))} 
+                        className="w-full accent-blue-600 h-2 bg-blue-200 rounded-full appearance-none outline-none" 
+                      />
+                    </div>
+                    <div className="text-3xl font-black text-blue-900 w-20 text-center">{tempProgress}%</div>
+                    <button 
+                      onClick={handleUpdateProgress} 
+                      disabled={tempProgress === viewTask.progressPercent}
+                      className="px-6 py-4 bg-blue-600 text-white rounded-2xl font-black text-sm hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-blue-100 shrink-0"
+                    >
+                      Update
+                    </button>
+                  </div>
+                )}
 
                 <div className="pt-8 border-t border-zinc-100">
                   <h3 className="text-sm font-black text-zinc-900 mb-6 flex items-center gap-2">
