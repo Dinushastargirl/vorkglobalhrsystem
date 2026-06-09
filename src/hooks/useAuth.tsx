@@ -52,11 +52,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     const emps = await getEmployees();
-    let matchedProfile = emps.find(e => e.email.toLowerCase() === creds.email.toLowerCase());
+    let matchedProfile = emps.find(e => e.email?.toLowerCase() === creds.email.toLowerCase());
 
     if (!matchedProfile) {
       // Self-healing: create the profile from MOCK_EMPLOYEES_DATA or default
-      const defaultEmp = MOCK_EMPLOYEES_DATA.find(e => e.email.toLowerCase() === creds.email.toLowerCase());
+      const defaultEmp = MOCK_EMPLOYEES_DATA.find(e => e.email?.toLowerCase() === creds.email.toLowerCase());
       if (defaultEmp) {
         const salaryA = defaultEmp.salaryA || 0;
         const intensive = defaultEmp.intensive || 0;
