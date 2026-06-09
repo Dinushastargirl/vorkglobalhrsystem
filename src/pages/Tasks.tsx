@@ -18,10 +18,11 @@ export default function Tasks() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [employees, setEmployees] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
+  const isAdmin = user?.role === 'super' || user?.role === 'owner' || user?.role === 'hr';
   
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<'All' | TaskStatus>('All');
-  const [activeTab, setActiveTab] = useState<'my_tasks' | 'all_tasks'>('my_tasks');
+  const [activeTab, setActiveTab] = useState<'my_tasks' | 'all_tasks'>(isAdmin ? 'all_tasks' : 'my_tasks');
   const [tempProgress, setTempProgress] = useState(0);
   
   // Modal states
@@ -32,7 +33,6 @@ export default function Tasks() {
   const [viewTask, setViewTask] = useState<Task | null>(null);
   const [commentText, setCommentText] = useState('');
 
-  const isAdmin = user?.role === 'super' || user?.role === 'owner' || user?.role === 'hr';
 
   const loadData = async () => {
     if (!uid) return;
