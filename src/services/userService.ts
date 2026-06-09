@@ -79,7 +79,7 @@ function getStoredEmployees(): UserProfile[] {
     patched = true;
   }
 
-  const jayaminda = emps.find(e => e.email === 'msjaiminda@gmail.com');
+  const jayaminda = emps.find(e => e.email === 'msjayaminda@gmail.com');
   if (jayaminda && jayaminda.nic !== '200132803902') {
     jayaminda.name = 'Sasindu Jayaminda Mohotti';
     jayaminda.nic = '200132803902';
