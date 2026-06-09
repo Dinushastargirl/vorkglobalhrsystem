@@ -79,6 +79,14 @@ function getStoredEmployees(): UserProfile[] {
     patched = true;
   }
 
+  // Patch old email if it exists
+  const oldJayaminda = emps.find(e => e.email === 'msjaiminda@gmail.com');
+  if (oldJayaminda) {
+    oldJayaminda.email = 'msjayaminda@gmail.com';
+    oldJayaminda.username = 'jayaminda';
+    patched = true;
+  }
+
   const jayaminda = emps.find(e => e.email === 'msjayaminda@gmail.com');
   if (jayaminda && jayaminda.nic !== '200132803902') {
     jayaminda.name = 'Sasindu Jayaminda Mohotti';
