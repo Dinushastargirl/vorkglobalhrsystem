@@ -129,41 +129,43 @@ export default function Attendance() {
       </div>
 
       {/* Action Bar (For Employees) */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {!myTodayRecord ? (
-          <button onClick={() => handleAction('checkIn')} className="col-span-1 md:col-span-2 bg-blue-600 text-white p-6 rounded-3xl font-black text-lg flex items-center justify-center gap-3 hover:bg-blue-700 transition-all shadow-xl shadow-blue-100">
-            <ArrowUpRight size={24} /> Log Check In
-          </button>
-        ) : !myTodayRecord.checkOut ? (
-          <>
-            {!myTodayRecord.breakStart ? (
-              <button onClick={() => handleAction('startBreak')} className="col-span-1 bg-amber-500 text-white p-6 rounded-3xl font-black text-lg flex items-center justify-center gap-3 hover:bg-amber-600 transition-all shadow-xl shadow-amber-100">
-                <Coffee size={24} /> Start Break
-              </button>
-            ) : !myTodayRecord.breakEnd ? (
-              <button onClick={() => handleAction('endBreak')} className="col-span-1 bg-green-500 text-white p-6 rounded-3xl font-black text-lg flex items-center justify-center gap-3 hover:bg-green-600 transition-all shadow-xl shadow-green-100">
-                <Coffee size={24} /> End Break
-              </button>
-            ) : (
-              <button disabled className="col-span-1 bg-zinc-100 text-zinc-400 p-6 rounded-3xl font-black text-lg flex items-center justify-center gap-3 cursor-not-allowed border border-zinc-200">
-                <Coffee size={24} /> Break Taken
-              </button>
-            )}
-            
-            <button onClick={() => handleAction('checkOut')} className="col-span-1 bg-zinc-900 text-white p-6 rounded-3xl font-black text-lg flex items-center justify-center gap-3 hover:bg-zinc-800 transition-all shadow-xl shadow-zinc-200">
-              <ArrowDownRight size={24} /> Check Out
+      {user?.role !== 'super' && (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {!myTodayRecord ? (
+            <button onClick={() => handleAction('checkIn')} className="col-span-1 md:col-span-2 bg-blue-600 text-white p-6 rounded-3xl font-black text-lg flex items-center justify-center gap-3 hover:bg-blue-700 transition-all shadow-xl shadow-blue-100">
+              <ArrowUpRight size={24} /> Log Check In
             </button>
-          </>
-        ) : (
-          <div className="col-span-1 md:col-span-2 bg-green-50 border border-green-100 text-green-700 p-6 rounded-3xl font-black text-lg flex items-center justify-center gap-3 cursor-default">
-            <CheckCircle2 size={24} /> Shift Completed
-          </div>
-        )}
-        
-        <button onClick={() => setIsSupportModalOpen(true)} className="col-span-1 md:col-span-2 bg-white border border-zinc-200 text-zinc-700 p-6 rounded-3xl font-black text-lg flex items-center justify-center gap-3 hover:bg-zinc-50 transition-all shadow-sm">
-          <LifeBuoy size={24} className="text-purple-500" /> Support Ticket
-        </button>
-      </div>
+          ) : !myTodayRecord.checkOut ? (
+            <>
+              {!myTodayRecord.breakStart ? (
+                <button onClick={() => handleAction('startBreak')} className="col-span-1 bg-amber-500 text-white p-6 rounded-3xl font-black text-lg flex items-center justify-center gap-3 hover:bg-amber-600 transition-all shadow-xl shadow-amber-100">
+                  <Coffee size={24} /> Start Break
+                </button>
+              ) : !myTodayRecord.breakEnd ? (
+                <button onClick={() => handleAction('endBreak')} className="col-span-1 bg-green-500 text-white p-6 rounded-3xl font-black text-lg flex items-center justify-center gap-3 hover:bg-green-600 transition-all shadow-xl shadow-green-100">
+                  <Coffee size={24} /> End Break
+                </button>
+              ) : (
+                <button disabled className="col-span-1 bg-zinc-100 text-zinc-400 p-6 rounded-3xl font-black text-lg flex items-center justify-center gap-3 cursor-not-allowed border border-zinc-200">
+                  <Coffee size={24} /> Break Taken
+                </button>
+              )}
+              
+              <button onClick={() => handleAction('checkOut')} className="col-span-1 bg-zinc-900 text-white p-6 rounded-3xl font-black text-lg flex items-center justify-center gap-3 hover:bg-zinc-800 transition-all shadow-xl shadow-zinc-200">
+                <ArrowDownRight size={24} /> Check Out
+              </button>
+            </>
+          ) : (
+            <div className="col-span-1 md:col-span-2 bg-green-50 border border-green-100 text-green-700 p-6 rounded-3xl font-black text-lg flex items-center justify-center gap-3 cursor-default">
+              <CheckCircle2 size={24} /> Shift Completed
+            </div>
+          )}
+          
+          <button onClick={() => setIsSupportModalOpen(true)} className="col-span-1 md:col-span-2 bg-white border border-zinc-200 text-zinc-700 p-6 rounded-3xl font-black text-lg flex items-center justify-center gap-3 hover:bg-zinc-50 transition-all shadow-sm">
+            <LifeBuoy size={24} className="text-purple-500" /> Support Ticket
+          </button>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Attendance Logs Table */}
