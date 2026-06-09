@@ -95,7 +95,12 @@ export default function Attendance() {
 
   const formatTimeOnly = (isoString?: string) => {
     if (!isoString) return '--:--';
-    return new Date(isoString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return new Date(isoString).toLocaleTimeString('en-US', { 
+      timeZone: 'Asia/Colombo', 
+      hour: '2-digit', 
+      minute: '2-digit', 
+      hour12: true 
+    });
   };
 
   const getLocalToday = () => {
@@ -123,7 +128,7 @@ export default function Attendance() {
           <p className="text-zinc-500 font-medium">Manage daily logs, breaks, and support requests</p>
         </div>
         <div className="flex flex-col items-end">
-          <p className="text-4xl font-black tracking-tighter tabular-nums text-zinc-900">{currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+          <p className="text-4xl font-black tracking-tighter tabular-nums text-zinc-900">{currentTime.toLocaleTimeString('en-US', { timeZone: 'Asia/Colombo', hour: '2-digit', minute: '2-digit', hour12: true })}</p>
           <p className="text-xs font-bold text-blue-600 uppercase tracking-widest">{currentTime.toLocaleDateString([], { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
         </div>
       </div>

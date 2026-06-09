@@ -443,7 +443,7 @@ export default function Dashboard() {
                       </p>
                     </div>
                     <div className="text-right hidden md:block border-l border-white/10 pl-6">
-                      <p className="text-5xl font-black tracking-tighter tabular-nums">{currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                      <p className="text-5xl font-black tracking-tighter tabular-nums">{currentTime.toLocaleTimeString('en-US', { timeZone: 'Asia/Colombo', hour: '2-digit', minute: '2-digit', hour12: true })}</p>
                       <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest">{currentTime.toLocaleDateString([], { weekday: 'long' })}</p>
                     </div>
                   </div>
