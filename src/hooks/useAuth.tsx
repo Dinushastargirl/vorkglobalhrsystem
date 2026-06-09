@@ -23,8 +23,8 @@ const VALID_CREDENTIALS: Record<string, { password: string; email: string }> = {
   'janani': { password: 'janani123', email: 'jananisaijanani9@gmail.com' },
   'nisalsayuranga0710@gmail.com': { password: 'nisal123', email: 'nisalsayuranga0710@gmail.com' },
   'nisal': { password: 'nisal123', email: 'nisalsayuranga0710@gmail.com' },
-  'msjaiminda@gmail.com': { password: 'jaiminda123', email: 'msjaiminda@gmail.com' },
-  'jaiminda': { password: 'jaiminda123', email: 'msjaiminda@gmail.com' }
+  'msjaiminda@gmail.com': { password: 'jayaminda123', email: 'msjaiminda@gmail.com' },
+  'jayaminda': { password: 'jayaminda123', email: 'msjaiminda@gmail.com' }
 };
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {

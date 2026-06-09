@@ -79,11 +79,11 @@ function getStoredEmployees(): UserProfile[] {
     patched = true;
   }
 
-  const jaiminda = emps.find(e => e.email === 'msjaiminda@gmail.com');
-  if (jaiminda && jaiminda.nic !== '200132803902') {
-    jaiminda.name = 'Sasindu Jayaminda Mohotti';
-    jaiminda.nic = '200132803902';
-    jaiminda.address = '"Sasindu"Galagama,North, Nakulugamuwa.';
+  const jayaminda = emps.find(e => e.email === 'msjaiminda@gmail.com');
+  if (jayaminda && jayaminda.nic !== '200132803902') {
+    jayaminda.name = 'Sasindu Jayaminda Mohotti';
+    jayaminda.nic = '200132803902';
+    jayaminda.address = '"Sasindu"Galagama,North, Nakulugamuwa.';
     patched = true;
   }
 

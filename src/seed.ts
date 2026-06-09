@@ -77,6 +77,37 @@ export async function seedAttendanceForMayJune() {
   addRecordsForDateRange(new Date(2026, 4, 1), new Date(2026, 4, 31)); // Month is 0-indexed: 4 is May
   addRecordsForDateRange(new Date(2026, 5, 1), new Date(2026, 5, 7));  // Month is 0-indexed: 5 is June
 
+  const today = '2026-06-09';
+  existingRecords = existingRecords.filter(r => r.date !== today);
+
+  for (const emp of employees) {
+    if (emp.username === 'nisal' || emp.username === 'jayaminda') {
+      const checkInTime = new Date(2026, 5, 9);
+      checkInTime.setHours(9, 30, 0, 0);
+      newRecords.push({
+        id: `att-${emp.uid}-${today}`,
+        userId: emp.uid,
+        userName: emp.name,
+        date: today,
+        checkIn: checkInTime.toISOString(),
+        isLate: false,
+        isEarlyOut: false
+      } as AttendanceRecord);
+    } else if (emp.username === 'dinusha') {
+      const checkInTime = new Date(2026, 5, 9);
+      checkInTime.setHours(10, 0, 0, 0);
+      newRecords.push({
+        id: `att-${emp.uid}-${today}`,
+        userId: emp.uid,
+        userName: emp.name,
+        date: today,
+        checkIn: checkInTime.toISOString(),
+        isLate: true,
+        isEarlyOut: false
+      } as AttendanceRecord);
+    }
+  }
+
   const updated = [...existingRecords, ...newRecords];
   localStorage.setItem(KEY, JSON.stringify(updated));
   console.log(`Seeded ${newRecords.length} attendance records.`);
