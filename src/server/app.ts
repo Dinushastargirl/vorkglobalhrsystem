@@ -245,7 +245,11 @@ app.put('/api/support/:id', async (req, res) => {
 // --- Tasks ---
 app.get('/api/tasks', async (req, res) => {
   try {
-    const tasks = await prisma.task.findMany({ orderBy: { createdAt: 'desc' } });
+    const { userId } = req.query;
+    const tasks = await prisma.task.findMany({ 
+      where: userId ? { assignedTo: String(userId) } : undefined,
+      orderBy: { createdAt: 'desc' } 
+    });
     res.json(tasks);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch tasks' });
