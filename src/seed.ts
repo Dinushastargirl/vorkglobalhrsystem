@@ -1,7 +1,7 @@
 import { getEmployees, saveEmployee } from './services/userService';
 import { AttendanceRecord } from './types';
 
-const KEY = 'hr_pulse_v8_attendance';
+const KEY = 'vorkca_hr_attendance_v9';
 
 export async function seedAttendanceForMayJune() {
   const employees = await getEmployees();
