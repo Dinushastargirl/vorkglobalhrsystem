@@ -109,7 +109,7 @@ export default function Attendance() {
   const myTodayRecord = attendance.find(r => r.userId === uid && r.date === todayStr);
 
   const filteredAttendance = attendance.filter(r => 
-    r.userName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    r.userName?.toLowerCase()?.includes(searchQuery.toLowerCase()) ||
     r.date.includes(searchQuery)
   );
 
