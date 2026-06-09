@@ -1,22 +1,15 @@
 import { AdvanceRequest } from '../types';
 import * as userService from './userService';
 
-const KEY = 'hr_pulse_v8_advances';
-
-function getStoredAdvances(): AdvanceRequest[] {
-  const data = localStorage.getItem(KEY);
-  return data ? JSON.parse(data) : [];
-}
-
-function saveStoredAdvances(advances: AdvanceRequest[]) {
-  localStorage.setItem(KEY, JSON.stringify(advances));
-}
-
 export async function getAdvances(userId?: string): Promise<AdvanceRequest[]> {
-  const advances = getStoredAdvances();
+  const url = userId ? `/api/advances?userId=${userId}` : '/api/advances';
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('Failed to fetch advances');
+  const advances: AdvanceRequest[] = await res.json();
+  
   const emps = await userService.getEmployees();
-
-  const mapped = advances.map(d => {
+  
+  return advances.map(d => {
     const emp = emps.find(e => e.uid === d.userId);
     const approver = emps.find(e => e.uid === d.approvedBy);
     return {
@@ -27,17 +20,10 @@ export async function getAdvances(userId?: string): Promise<AdvanceRequest[]> {
       approvedBy: approver?.name || d.approvedBy
     };
   });
-
-  if (userId) {
-    return mapped.filter(d => d.userId === userId).sort((a, b) => new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime());
-  }
-  return mapped.sort((a, b) => new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime());
 }
 
 export async function submitAdvance(advance: Partial<AdvanceRequest>): Promise<void> {
-  const advances = getStoredAdvances();
-  const newAdvance: AdvanceRequest = {
-    id: `adv-${Date.now()}`,
+  const newAdvance = {
     userId: advance.userId || '',
     amount: Number(advance.amount) || 0,
     reason: advance.reason || '',
@@ -45,8 +31,12 @@ export async function submitAdvance(advance: Partial<AdvanceRequest>): Promise<v
     createdAt: new Date().toISOString()
   };
 
-  advances.push(newAdvance);
-  saveStoredAdvances(advances);
+  const res = await fetch('/api/advances', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(newAdvance)
+  });
+  if (!res.ok) throw new Error('Failed to submit advance');
 }
 
 export async function updateAdvanceStatus(
@@ -56,14 +46,12 @@ export async function updateAdvanceStatus(
   employeeId?: string,
   amount?: number
 ): Promise<void> {
-  const advances = getStoredAdvances();
-  const index = advances.findIndex(d => d.id === id);
-  if (index > -1) {
-    advances[index].status = status;
-    advances[index].approvedBy = adminId;
-    advances[index].updatedAt = new Date().toISOString();
-    saveStoredAdvances(advances);
-  }
+  const res = await fetch(`/api/advances/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status, approvedBy: adminId, updatedAt: new Date().toISOString() })
+  });
+  if (!res.ok) throw new Error('Failed to update advance');
 
   if (status === 'Approved' && employeeId && amount) {
     const emp = await userService.getEmployee(employeeId);
@@ -86,7 +74,6 @@ export async function updateAdvanceStatus(
 }
 
 export async function deleteAdvance(id: string): Promise<void> {
-  const advances = getStoredAdvances();
-  const filtered = advances.filter(d => d.id !== id);
-  saveStoredAdvances(filtered);
+  const res = await fetch(`/api/advances/${id}`, { method: 'DELETE' });
+  if (!res.ok) throw new Error('Failed to delete advance');
 }

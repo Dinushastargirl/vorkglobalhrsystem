@@ -1,45 +1,33 @@
 import { PerformanceRecord } from '../types';
 import * as userService from './userService';
 
-const KEY = 'hr_pulse_v8_performance';
-
-function getStoredPerformance(): PerformanceRecord[] {
-  const data = localStorage.getItem(KEY);
-  return data ? JSON.parse(data) : [];
-}
-
-function saveStoredPerformance(perf: PerformanceRecord[]) {
-  localStorage.setItem(KEY, JSON.stringify(perf));
-}
-
 export async function getPerformance(userId?: string): Promise<PerformanceRecord[]> {
-  const records = getStoredPerformance();
+  const url = userId ? `/api/performance?userId=${userId}` : '/api/performance';
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('Failed to fetch performance');
+  const records: PerformanceRecord[] = await res.json();
+  
   const emps = await userService.getEmployees();
-
-  const mapped = records.map(d => {
+  
+  return records.map(d => {
     const emp = emps.find(e => e.uid === d.userId);
-    const evaluator = emps.find(e => e.uid === d.evaluatorId);
+    const evaluator = emps.find(e => e.uid === d.evaluatorId || e.name === d.evaluatorName);
     return {
       ...d,
       userName: emp?.name || 'Unknown',
-      evaluatorName: evaluator?.name || d.evaluatorName || 'System'
+      evaluatorName: evaluator?.name || d.evaluatorName || 'System',
+      goals: typeof d.goals === 'string' ? JSON.parse(d.goals) : (d.goals || []),
+      metrics: typeof d.metrics === 'string' ? JSON.parse(d.metrics) : d.metrics
     };
   });
-
-  if (userId) {
-    return mapped.filter(r => r.userId === userId).sort((a, b) => new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime());
-  }
-  return mapped.sort((a, b) => new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime());
 }
 
 export async function savePerformance(perf: Partial<PerformanceRecord>): Promise<void> {
-  const records = getStoredPerformance();
-  const id = perf.id;
-
-  const payload: PerformanceRecord = {
-    id: id || `perf-${Date.now()}`,
+  const payload = {
     userId: perf.userId || '',
     userName: perf.userName || '',
+    month: perf.month || new Date().getMonth(),
+    year: perf.year || new Date().getFullYear(),
     evaluatorId: perf.evaluatorId || '',
     evaluatorName: perf.evaluatorName || '',
     score: perf.score || 0,
@@ -48,17 +36,19 @@ export async function savePerformance(perf: Partial<PerformanceRecord>): Promise
     hrFeedback: perf.hrFeedback || '',
     selfEvaluation: perf.selfEvaluation || '',
     goals: perf.goals || [],
+    metrics: perf.metrics,
     status: perf.status || 'Draft',
+    evaluator: perf.evaluator || perf.evaluatorId || '',
     createdAt: perf.createdAt || new Date().toISOString()
   };
 
-  if (id) {
-    const index = records.findIndex(r => r.id === id);
-    if (index > -1) {
-      records[index] = payload;
-    }
-  } else {
-    records.push(payload);
-  }
-  saveStoredPerformance(records);
+  const url = perf.id ? `/api/performance/${perf.id}` : '/api/performance';
+  const method = perf.id ? 'PUT' : 'POST';
+
+  const res = await fetch(url, {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  if (!res.ok) throw new Error('Failed to save performance');
 }

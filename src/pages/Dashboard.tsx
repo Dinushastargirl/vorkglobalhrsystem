@@ -196,7 +196,7 @@ export default function Dashboard() {
     const targetId = selectedTaskUserId || uid;
     if (!title || !targetId) return;
 
-    await taskService.addTask(targetId, title);
+    await taskService.saveTask({ assignedTo: targetId, title, assignedBy: uid || '' });
     form.reset();
     toast.success('Task added');
     loadData();

@@ -167,3 +167,17 @@ model PerformanceRecord {
   comments   String?
   createdAt  String
 }
+
+model AdvanceRequest {
+  id         String   @id @default(uuid())
+  userId     String
+  userName   String?
+  userRole   String?
+  userPhoto  String?
+  amount     Float    @default(0)
+  reason     String
+  status     String   @default("Pending")
+  approvedBy String?
+  createdAt  String
+  updatedAt  String?
+}
