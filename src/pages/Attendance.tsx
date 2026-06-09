@@ -134,7 +134,7 @@ export default function Attendance() {
       </div>
 
       {/* Action Bar (For Employees) */}
-      {user?.role !== 'super' && (
+      {/* Action Bar (For Employees) */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {!myTodayRecord ? (
             <button onClick={() => handleAction('checkIn')} className="col-span-1 md:col-span-2 bg-blue-600 text-white p-6 rounded-3xl font-black text-lg flex items-center justify-center gap-3 hover:bg-blue-700 transition-all shadow-xl shadow-blue-100">
@@ -170,7 +170,6 @@ export default function Attendance() {
             <LifeBuoy size={24} className="text-purple-500" /> Support Ticket
           </button>
         </div>
-      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Attendance Logs Table */}

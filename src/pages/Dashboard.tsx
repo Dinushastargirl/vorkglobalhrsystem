@@ -493,8 +493,6 @@ export default function Dashboard() {
               </div>
 
               <div className="flex flex-wrap gap-4">
-                {user?.role !== 'super' && (
-                  <>
                     {!(attendance.find(r => r.date === getLocalToday())) ? (
                       <button 
                         onClick={handleCheckIn}
