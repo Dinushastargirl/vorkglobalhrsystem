@@ -1,5 +1,5 @@
 import express from 'express';
-import { prisma } from '../../api/utils/prisma';
+import { prisma } from '../../api/utils/prisma.js';
 import jwt from 'jsonwebtoken';
 
 const app = express();
