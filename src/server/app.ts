@@ -82,9 +82,10 @@ app.post('/api/users', async (req, res) => {
 
 app.put('/api/users/:uid', async (req, res) => {
   try {
-    const user = await prisma.user.update({
+    const user = await prisma.user.upsert({
       where: { uid: req.params.uid },
-      data: req.body
+      update: req.body,
+      create: { ...req.body, uid: req.params.uid }
     });
     res.json(user);
   } catch (err) {
