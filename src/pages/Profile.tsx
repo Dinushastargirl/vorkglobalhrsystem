@@ -8,8 +8,8 @@ import { useAuth } from '../hooks/useAuth';
 import { cn, formatDate } from '../lib/utils';
 import * as userService from '../services/userService';
 import { toast } from 'sonner';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 export default function Profile() {
   const { user, logout, updateUser } = useAuth();
@@ -149,7 +149,7 @@ export default function Profile() {
       ['Net Payable', `LKR ${user.net.toLocaleString()}`],
     ];
 
-    (doc as any).autoTable({
+    autoTable(doc, {
       startY: 70,
       head: [['Description', 'Amount']],
       body: tableData,
@@ -303,59 +303,34 @@ export default function Profile() {
             </div>
           </div>
 
-          {/* Bank Account Details Card (Only for Employees & HR) */}
-          {(user.role === 'employee' || user.role === 'hr') && (
-            <div className="bg-white p-8 rounded-[2.5rem] border border-zinc-100 shadow-sm relative overflow-hidden">
-              <div className="flex items-center justify-between mb-8">
-                <h3 className="text-xl font-black text-zinc-900 flex items-center gap-2">
-                  <CreditCard size={22} className="text-purple-500" />
-                  Bank Account Details
-                </h3>
-                <span className="text-[9px] font-black tracking-widest uppercase px-3 py-1 bg-purple-50 text-purple-600 border border-purple-100 rounded-full">
-                  Verified Acc
-                </span>
+          {/* Bank Account Details Card (Available for all roles) */}
+          <div className="bg-white p-8 rounded-[2.5rem] border border-zinc-100 shadow-sm relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-purple-50 rounded-full blur-3xl -mr-10 -mt-10 transition-transform group-hover:scale-150 duration-700"></div>
+            <div className="flex items-center gap-4 mb-6 relative z-10">
+              <div className="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center">
+                <CreditCard size={24} />
               </div>
-
-              {user.bankName || user.accountNo ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest ml-1">Bank Name</label>
-                    <div className="px-5 py-4 bg-zinc-50/50 rounded-2xl text-sm font-bold text-zinc-700 border border-zinc-100">
-                      {user.bankName}
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest ml-1">Branch Name</label>
-                    <div className="px-5 py-4 bg-zinc-50/50 rounded-2xl text-sm font-bold text-zinc-700 border border-zinc-100">
-                      {user.bankBranch || '—'}
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest ml-1">Account Number</label>
-                    <div className="px-5 py-4 bg-zinc-50/50 rounded-2xl text-sm font-bold text-zinc-700 border border-zinc-100 font-mono tracking-wider">
-                      {user.accountNo}
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest ml-1">Account Holder Name</label>
-                    <div className="px-5 py-4 bg-zinc-50/50 rounded-2xl text-sm font-bold text-zinc-700 border border-zinc-100">
-                      {user.accountHolderName || user.name}
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="py-8 text-center bg-zinc-50/50 border border-dashed border-zinc-200 rounded-[2rem] flex flex-col items-center justify-center gap-3">
-                  <div className="w-12 h-12 rounded-2xl bg-purple-50 flex items-center justify-center text-purple-400">
-                    <CreditCard size={24} />
-                  </div>
-                  <div>
-                    <p className="font-bold text-zinc-700 text-sm">No bank account details added</p>
-                    <p className="text-xs text-zinc-400 mt-0.5">Please update your profile to configure your bank account details.</p>
-                  </div>
-                </div>
-              )}
+              <div>
+                <h3 className="text-xl font-black text-zinc-900">Bank Details</h3>
+                <p className="text-sm font-medium text-zinc-500">Salary deposit account</p>
+              </div>
             </div>
-          )}
+
+            <div className="space-y-4 relative z-10">
+              <div className="flex justify-between items-center py-3 border-b border-zinc-50">
+                <span className="text-sm font-bold text-zinc-400">Bank Name</span>
+                <span className="text-sm font-black text-zinc-900">{user.bankName || 'Not Provided'}</span>
+              </div>
+              <div className="flex justify-between items-center py-3 border-b border-zinc-50">
+                <span className="text-sm font-bold text-zinc-400">Account Number</span>
+                <span className="text-sm font-black text-zinc-900 font-mono">{user.accountNo || 'Not Provided'}</span>
+              </div>
+              <div className="flex justify-between items-center py-3">
+                <span className="text-sm font-bold text-zinc-400">Branch</span>
+                <span className="text-sm font-black text-zinc-900">{user.bankBranch || 'Not Provided'}</span>
+              </div>
+            </div>
+          </div>
 
           {/* Salary & Payslips */}
           {user.name !== 'Super Admin' && (
@@ -559,63 +534,59 @@ export default function Profile() {
                     />
                   </div>
                 </div>
-              </div>
-
-              {/* SECTION 2: Bank Details (Only for Employees & HR) */}
-              {(user.role === 'employee' || user.role === 'hr') && (
-                <div className="space-y-6 pt-4">
-                  <h4 className="text-xs font-black uppercase text-zinc-400 tracking-widest border-b border-zinc-100 pb-2 flex items-center gap-2">
-                    <CreditCard size={14} className="text-purple-500" />
-                    Bank Account Details
-                  </h4>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-bold text-zinc-700 uppercase tracking-widest ml-1">Bank Name</label>
-                      <input 
-                        type="text"
-                        value={formData.bankName}
-                        onChange={(e) => setFormData(prev => ({ ...prev, bankName: e.target.value }))}
-                        className="w-full px-5 py-3.5 bg-zinc-50 rounded-2xl text-sm font-bold text-zinc-700 border border-zinc-100 focus:ring-2 focus:ring-purple-500 outline-none transition-all placeholder:text-zinc-300"
-                        placeholder="e.g. Commercial Bank, BOC"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-bold text-zinc-700 uppercase tracking-widest ml-1">Branch Name</label>
-                      <input 
-                        type="text"
-                        value={formData.bankBranch}
-                        onChange={(e) => setFormData(prev => ({ ...prev, bankBranch: e.target.value }))}
-                        className="w-full px-5 py-3.5 bg-zinc-50 rounded-2xl text-sm font-bold text-zinc-700 border border-zinc-100 focus:ring-2 focus:ring-purple-500 outline-none transition-all placeholder:text-zinc-300"
-                        placeholder="e.g. Borella, Kollupitiya"
-                      />
-                    </div>
+              {/* SECTION 2: Bank Details (Available for all roles) */}
+              <div className="space-y-6 pt-4">
+                <h4 className="text-xs font-black uppercase text-zinc-400 tracking-widest border-b border-zinc-100 pb-2 flex items-center gap-2">
+                  <CreditCard size={14} className="text-purple-500" />
+                  Bank Account Details
+                </h4>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-zinc-700 uppercase tracking-widest ml-1">Bank Name</label>
+                    <input 
+                      type="text"
+                      value={formData.bankName}
+                      onChange={(e) => setFormData(prev => ({ ...prev, bankName: e.target.value }))}
+                      className="w-full px-5 py-3.5 bg-zinc-50 rounded-2xl text-sm font-bold text-zinc-700 border border-zinc-100 focus:ring-2 focus:ring-purple-500 outline-none transition-all placeholder:text-zinc-300"
+                      placeholder="e.g. Commercial Bank, BOC"
+                    />
                   </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-bold text-zinc-700 uppercase tracking-widest ml-1">Account Number</label>
-                      <input 
-                        type="text"
-                        value={formData.accountNo}
-                        onChange={(e) => setFormData(prev => ({ ...prev, accountNo: e.target.value }))}
-                        className="w-full px-5 py-3.5 bg-zinc-50 rounded-2xl text-sm font-bold text-zinc-700 border border-zinc-100 focus:ring-2 focus:ring-purple-500 outline-none transition-all placeholder:text-zinc-300 font-mono"
-                        placeholder="e.g. 1040082341"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-bold text-zinc-700 uppercase tracking-widest ml-1">Account Holder Name</label>
-                      <input 
-                        type="text"
-                        value={formData.accountHolderName}
-                        onChange={(e) => setFormData(prev => ({ ...prev, accountHolderName: e.target.value }))}
-                        className="w-full px-5 py-3.5 bg-zinc-50 rounded-2xl text-sm font-bold text-zinc-700 border border-zinc-100 focus:ring-2 focus:ring-purple-500 outline-none transition-all placeholder:text-zinc-300"
-                        placeholder="e.g. J. A. D. S. Perera"
-                      />
-                    </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-zinc-700 uppercase tracking-widest ml-1">Branch Name</label>
+                    <input 
+                      type="text"
+                      value={formData.bankBranch}
+                      onChange={(e) => setFormData(prev => ({ ...prev, bankBranch: e.target.value }))}
+                      className="w-full px-5 py-3.5 bg-zinc-50 rounded-2xl text-sm font-bold text-zinc-700 border border-zinc-100 focus:ring-2 focus:ring-purple-500 outline-none transition-all placeholder:text-zinc-300"
+                      placeholder="e.g. Borella, Kollupitiya"
+                    />
                   </div>
                 </div>
-              )}
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-zinc-700 uppercase tracking-widest ml-1">Account Number</label>
+                    <input 
+                      type="text"
+                      value={formData.accountNo}
+                      onChange={(e) => setFormData(prev => ({ ...prev, accountNo: e.target.value }))}
+                      className="w-full px-5 py-3.5 bg-zinc-50 rounded-2xl text-sm font-bold text-zinc-700 border border-zinc-100 focus:ring-2 focus:ring-purple-500 outline-none transition-all placeholder:text-zinc-300 font-mono"
+                      placeholder="e.g. 1040082341"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-zinc-700 uppercase tracking-widest ml-1">Account Holder Name</label>
+                    <input 
+                      type="text"
+                      value={formData.accountHolderName}
+                      onChange={(e) => setFormData(prev => ({ ...prev, accountHolderName: e.target.value }))}
+                      className="w-full px-5 py-3.5 bg-zinc-50 rounded-2xl text-sm font-bold text-zinc-700 border border-zinc-100 focus:ring-2 focus:ring-purple-500 outline-none transition-all placeholder:text-zinc-300"
+                      placeholder="e.g. J. A. D. S. Perera"
+                    />
+                  </div>
+                </div>
+              </div>
 
               {/* SECTION 3: ICT Skills */}
               <div className="space-y-6 pt-4">

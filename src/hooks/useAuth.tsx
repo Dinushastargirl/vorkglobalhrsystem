@@ -33,14 +33,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Load session from local storage on mount
-    const savedSession = localStorage.getItem('hr_pulse_v8_session');
-    if (savedSession) {
-      const parsed = JSON.parse(savedSession);
-      setUser(parsed);
-      setUid(parsed.uid);
-    }
-    setLoading(false);
+    const init = async () => {
+      const savedSession = localStorage.getItem('hr_pulse_v8_session');
+      if (savedSession) {
+        const parsed = JSON.parse(savedSession);
+        try {
+          const emps = await getEmployees();
+          const matchedProfile = emps.find(e => e.email?.toLowerCase() === parsed.email?.toLowerCase());
+          if (matchedProfile) {
+            setUser(matchedProfile);
+            setUid(matchedProfile.uid);
+            localStorage.setItem('hr_pulse_v8_session', JSON.stringify(matchedProfile));
+          } else {
+            setUser(parsed);
+            setUid(parsed.uid);
+          }
+        } catch (err) {
+          setUser(parsed);
+          setUid(parsed.uid);
+        }
+      }
+      setLoading(false);
+    };
+    init();
   }, []);
 
   const login = async (emailOrUsername: string, password: string) => {
