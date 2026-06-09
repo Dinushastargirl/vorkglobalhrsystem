@@ -48,11 +48,7 @@ export default function Leaderboard() {
           const empCourses = courses.filter(c => c.assignedTo === emp.uid && c.status === 'Completed');
           const empAttendance = attendance.filter(a => a.userId === emp.uid && a.checkIn && !a.isLate);
           
-          const tasksScore = empTasks.length * 10;
-          const coursesScore = empCourses.length * 50;
-          const attendanceScore = empAttendance.length * 5;
-          
-          const score = tasksScore + coursesScore + attendanceScore;
+          const score = emp.performanceScore || 0;
 
           return {
             ...emp,
