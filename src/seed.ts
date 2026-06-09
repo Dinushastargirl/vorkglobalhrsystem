@@ -39,7 +39,7 @@ export async function seedAttendanceForMayJune() {
   
   const newRecords: AttendanceRecord[] = [];
   
-  const addRecordsForDateRange = (start: Date, end: Date) => {
+  const addRecordsForDateRange = (start: Date, end: Date, specificUsername?: string) => {
     let curr = new Date(start);
     while (curr <= end) {
       const day = curr.getDay();
@@ -59,15 +59,18 @@ export async function seedAttendanceForMayJune() {
         checkOutTime.setHours(17, 30, 0, 0);
         
         for (const emp of employees) {
+          if (specificUsername && emp.username !== specificUsername) continue;
           newRecords.push({
             id: `att-${emp.uid}-${dateStr}`,
             userId: emp.uid,
+            userName: emp.name,
             date: dateStr,
             checkIn: checkInTime.toISOString(),
             checkOut: checkOutTime.toISOString(),
             isLate: false,
-            isEarlyOut: false
-          });
+            isEarlyOut: false,
+            status: 'Checked Out'
+          } as AttendanceRecord);
         }
       }
       curr.setDate(curr.getDate() + 1);
@@ -76,12 +79,15 @@ export async function seedAttendanceForMayJune() {
 
   addRecordsForDateRange(new Date(2026, 4, 1), new Date(2026, 4, 31)); // Month is 0-indexed: 4 is May
   addRecordsForDateRange(new Date(2026, 5, 1), new Date(2026, 5, 7));  // Month is 0-indexed: 5 is June
+  
+  // Seed March and April for Dinusha
+  addRecordsForDateRange(new Date(2026, 2, 1), new Date(2026, 3, 30), 'dinusha'); 
 
   const today = '2026-06-09';
   existingRecords = existingRecords.filter(r => r.date !== today);
 
   for (const emp of employees) {
-    if (emp.username === 'nisal' || emp.username === 'jayaminda') {
+    if (emp.username === 'nisal' || emp.username === 'jayaminda' || emp.username === 'janani') {
       const checkInTime = new Date(2026, 5, 9);
       checkInTime.setHours(9, 30, 0, 0);
       newRecords.push({
@@ -91,7 +97,8 @@ export async function seedAttendanceForMayJune() {
         date: today,
         checkIn: checkInTime.toISOString(),
         isLate: false,
-        isEarlyOut: false
+        isEarlyOut: false,
+        status: 'Working'
       } as AttendanceRecord);
     } else if (emp.username === 'dinusha') {
       const checkInTime = new Date(2026, 5, 9);
@@ -103,7 +110,8 @@ export async function seedAttendanceForMayJune() {
         date: today,
         checkIn: checkInTime.toISOString(),
         isLate: true,
-        isEarlyOut: false
+        isEarlyOut: false,
+        status: 'Working'
       } as AttendanceRecord);
     }
   }

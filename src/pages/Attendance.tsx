@@ -318,7 +318,7 @@ export default function Attendance() {
               <form onSubmit={submitSupport} className="p-8 space-y-6">
                 <div>
                   <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-2 ml-1">Issue Date</label>
-                  <input type="date" required value={supportData.date} onChange={e => setSupportData({...supportData, date: e.target.value})} className="w-full px-5 py-4 bg-zinc-50 border border-zinc-100 rounded-2xl text-sm focus:ring-2 focus:ring-purple-600 outline-none font-bold" />
+                  <input type="date" required max={getLocalToday()} value={supportData.date} onChange={e => setSupportData({...supportData, date: e.target.value})} className="w-full px-5 py-4 bg-zinc-50 border border-zinc-100 rounded-2xl text-sm focus:ring-2 focus:ring-purple-600 outline-none font-bold" />
                 </div>
                 <div>
                   <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-2 ml-1">Issue Type</label>
