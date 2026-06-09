@@ -1,0 +1,169 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  uid               String   @id @default(uuid())
+  name              String
+  email             String   @unique
+  username          String   @unique
+  password          String?
+  role              String   @default("employee")
+  branch            String   @default("General")
+  department        String?
+  phone             String?
+  photoUrl          String?
+  status            String?  @default("Available")
+  joinDate          String
+  salaryA           Float    @default(0)
+  salaryB           Float    @default(0)
+  epf               Float    @default(0)
+  advances          Float    @default(0)
+  cover             Float    @default(0)
+  intensive         Float    @default(0)
+  travelling        Float    @default(0)
+  net               Float    @default(0)
+  performanceScore  Float?
+  leaveQuotas       Json     @default("{\"annual\": 14, \"sick\": 7, \"casual\": 7, \"short\": 8}")
+  usedLeaves        Json     @default("{\"annual\": 0, \"sick\": 0, \"casual\": 0, \"short\": 0}")
+  sortOrder         Int      @default(999)
+  bankName          String?
+  bankBranch        String?
+  accountNo         String?
+  accountHolderName String?
+  nic               String?
+  address           String?
+  nickname          String?
+  extraDays         Float?   @default(0)
+  employmentHistory Json?
+  skills            Json?
+  techEquipment     Json?
+}
+
+model AttendanceRecord {
+  id         String   @id @default(uuid())
+  userId     String
+  userName   String
+  date       String
+  checkIn    String
+  checkOut   String?
+  breakStart String?
+  breakEnd   String?
+  isLate     Boolean  @default(false)
+  isEarlyOut Boolean  @default(false)
+  status     String?
+}
+
+model AttendanceSupportRequest {
+  id        String   @id @default(uuid())
+  userId    String
+  userName  String
+  date      String
+  reason    String
+  type      String
+  status    String   @default("Pending")
+  createdAt String
+}
+
+model LeaveRequest {
+  id              String   @id @default(uuid())
+  userId          String
+  userName        String
+  userRole        String
+  leaveType       String
+  startDate       String
+  endDate         String
+  startTime       String?
+  endTime         String?
+  reason          String
+  status          String   @default("Pending")
+  approvedBy      String?
+  createdAt       String
+  isQuotaExceeded Boolean  @default(false)
+  imageUrl        String?
+  userPhoto       String?
+}
+
+model Holiday {
+  id    String @id @default(uuid())
+  date  String
+  title String
+  type  String
+}
+
+model Task {
+  id              String   @id @default(uuid())
+  title           String
+  description     String
+  assignedTo      String
+  assignedToName  String?
+  assignedBy      String
+  assignedByName  String?
+  priority        String
+  startDate       String
+  deadline        String
+  estimatedHours  Float    @default(0)
+  progressPercent Float    @default(0)
+  status          String   @default("Not Started")
+  category        String?
+  attachments     Json?
+  comments        Json?
+  createdAt       String
+  updatedAt       String
+}
+
+model Course {
+  id              String   @id @default(uuid())
+  title           String
+  description     String
+  type            String
+  durationHours   Float    @default(0)
+  deadline        String
+  assignedTo      String
+  assignedBy      String
+  status          String   @default("Not Started")
+  progressPercent Float    @default(0)
+  proofUrl        String?
+  createdAt       String
+}
+
+model PayrollRecord {
+  id         String   @id @default(uuid())
+  userId     String
+  userName   String
+  month      Int
+  year       Int
+  salaryA    Float    @default(0)
+  salaryB    Float    @default(0)
+  epf        Float    @default(0)
+  advances   Float    @default(0)
+  cover      Float    @default(0)
+  intensive  Float    @default(0)
+  travelling Float    @default(0)
+  extraDays  Float?   @default(0)
+  netSalary  Float    @default(0)
+  status     String   @default("Pending")
+  createdAt  String
+  branch     String
+  sortOrder  Int?     @default(999)
+  incentives Float?
+  bonus      Float?
+}
+
+model PerformanceRecord {
+  id         String   @id @default(uuid())
+  userId     String
+  userName   String
+  month      Int
+  year       Int
+  score      Float    @default(0)
+  metrics    Json?
+  evaluator  String
+  comments   String?
+  createdAt  String
+}

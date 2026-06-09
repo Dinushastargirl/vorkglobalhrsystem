@@ -1,22 +1,15 @@
 import { PayrollRecord } from '../types';
 import * as userService from './userService';
 
-const KEY = 'hr_pulse_v8_payroll';
-
-function getStoredPayroll(): PayrollRecord[] {
-  const data = localStorage.getItem(KEY);
-  return data ? JSON.parse(data) : [];
-}
-
-function saveStoredPayroll(payroll: PayrollRecord[]) {
-  localStorage.setItem(KEY, JSON.stringify(payroll));
-}
-
 export async function getPayroll(userId?: string): Promise<PayrollRecord[]> {
-  const payroll = getStoredPayroll();
+  const url = userId ? `/api/payroll?userId=${userId}` : '/api/payroll';
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('Failed to fetch payroll');
+  const payroll: PayrollRecord[] = await res.json();
+  
   const emps = await userService.getEmployees();
-
-  const mapped = payroll.map(p => {
+  
+  return payroll.map(p => {
     const emp = emps.find(e => e.uid === p.userId);
     return {
       ...p,
@@ -25,35 +18,26 @@ export async function getPayroll(userId?: string): Promise<PayrollRecord[]> {
       sortOrder: emp?.sortOrder ?? 999
     };
   });
-
-  let filtered = mapped;
-  if (userId) {
-    filtered = mapped.filter(p => p.userId === userId);
-  }
-
-  // Sort by sortOrder
-  return filtered.sort((a, b) => (a.sortOrder || 999) - (b.sortOrder || 999));
 }
 
 export async function generatePayroll(month: number, year: number): Promise<void> {
   const employees = await userService.getEmployees();
-  const payroll = getStoredPayroll();
+  const payroll = await getPayroll();
 
   for (const emp of employees) {
-    if (emp.role === 'owner' || emp.name === 'Super Admin') continue;
+    if (emp.role === 'owner' || emp.role === 'super' || emp.name === 'Super Admin') continue;
 
     const exists = payroll.find(p => p.userId === emp.uid && p.month === month && p.year === year);
     if (!exists) {
       const netSalary = (emp.salaryA || 0) + (emp.intensive || 0) + (emp.travelling || 0) - (emp.epf || 0) - (emp.advances || 0) - (emp.cover || 0);
-      payroll.push({
-        id: `pay-${emp.uid}-${month}-${year}`,
+      const newRecord = {
         userId: emp.uid,
         userName: emp.name,
         month,
         year,
-        salaryA: emp.salaryA,
+        salaryA: emp.salaryA || 0,
         salaryB: 0,
-        epf: emp.epf,
+        epf: emp.epf || 0,
         advances: emp.advances || 0,
         cover: emp.cover || 0,
         intensive: emp.intensive || 0,
@@ -63,16 +47,19 @@ export async function generatePayroll(month: number, year: number): Promise<void
         status: 'Pending',
         createdAt: new Date().toISOString(),
         branch: emp.branch
+      };
+      
+      await fetch('/api/payroll', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newRecord)
       });
     }
   }
-  saveStoredPayroll(payroll);
 }
 
 export async function savePayroll(record: Partial<PayrollRecord>): Promise<void> {
-  const payroll = getStoredPayroll();
-  const newRecord: PayrollRecord = {
-    id: record.id || `pay-${record.userId}-${record.month}-${record.year}`,
+  const newRecord = {
     userId: record.userId || '',
     userName: record.userName || '',
     month: record.month || new Date().getMonth(),
@@ -91,26 +78,22 @@ export async function savePayroll(record: Partial<PayrollRecord>): Promise<void>
     branch: record.branch || ''
   };
 
-  payroll.push(newRecord);
-  saveStoredPayroll(payroll);
+  const url = record.id ? `/api/payroll/${record.id}` : '/api/payroll';
+  const method = record.id ? 'PUT' : 'POST';
+
+  const res = await fetch(url, {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(newRecord)
+  });
+  if (!res.ok) throw new Error('Failed to save payroll');
 }
 
 export async function updatePayroll(id: string, updates: Partial<PayrollRecord>): Promise<void> {
-  const payroll = getStoredPayroll();
-  const index = payroll.findIndex(p => p.id === id);
-  if (index > -1) {
-    const record = payroll[index];
-    if (updates.salaryA !== undefined) record.salaryA = updates.salaryA;
-    if (updates.salaryB !== undefined) record.salaryB = updates.salaryB;
-    if (updates.epf !== undefined) record.epf = updates.epf;
-    if (updates.advances !== undefined) record.advances = updates.advances;
-    if (updates.cover !== undefined) record.cover = updates.cover;
-    if (updates.intensive !== undefined) record.intensive = updates.intensive;
-    if (updates.travelling !== undefined) record.travelling = updates.travelling;
-    if (updates.extraDays !== undefined) record.extraDays = updates.extraDays;
-    if (updates.netSalary !== undefined) record.netSalary = updates.netSalary;
-    if (updates.status !== undefined) record.status = updates.status;
-
-    saveStoredPayroll(payroll);
-  }
+  const res = await fetch(`/api/payroll/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(updates)
+  });
+  if (!res.ok) throw new Error('Failed to update payroll');
 }
