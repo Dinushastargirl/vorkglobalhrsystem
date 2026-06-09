@@ -493,52 +493,52 @@ export default function Dashboard() {
               </div>
 
               <div className="flex flex-wrap gap-4">
-                {(user?.role === 'employee' || user?.role === 'hr') ? (
-                  <>
-                    {!(attendance.find(r => r.date === getLocalToday())) ? (
-                      <button 
-                        onClick={handleCheckIn}
-                        className="bg-blue-600 text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 hover:bg-blue-700 transition-all shadow-lg shadow-blue-950/20"
-                      >
-                        <ArrowUpRight size={20} />
-                        Check In Now
-                      </button>
-                    ) : !(attendance.find(r => r.date === getLocalToday() && r.checkOut)) ? (
-                      <>
-                        {!attendance.find(r => r.date === getLocalToday())?.breakStart ? (
-                          <button 
-                            onClick={handleStartBreak}
-                            className="bg-amber-500 text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 hover:bg-amber-600 transition-all shadow-lg shadow-amber-900/20"
-                          >
-                            <Timer size={20} />
-                            Start Break
-                          </button>
-                        ) : !attendance.find(r => r.date === getLocalToday())?.breakEnd ? (
-                          <button 
-                            onClick={handleEndBreak}
-                            className="bg-green-500 text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 hover:bg-green-600 transition-all shadow-lg shadow-green-900/20"
-                          >
-                            <Timer size={20} />
-                            End Break
-                          </button>
-                        ) : null}
-                        
+                <>
+                  {!(attendance.find(r => r.date === getLocalToday())) ? (
+                    <button 
+                      onClick={handleCheckIn}
+                      className="bg-blue-600 text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 hover:bg-blue-700 transition-all shadow-lg shadow-blue-950/20"
+                    >
+                      <ArrowUpRight size={20} />
+                      Check In Now
+                    </button>
+                  ) : !(attendance.find(r => r.date === getLocalToday() && r.checkOut)) ? (
+                    <>
+                      {!attendance.find(r => r.date === getLocalToday())?.breakStart ? (
                         <button 
-                          onClick={handleCheckOut}
-                          className="bg-white text-zinc-900 px-6 py-3 rounded-2xl font-bold flex items-center gap-2 hover:bg-zinc-100 transition-all shadow-lg"
+                          onClick={handleStartBreak}
+                          className="bg-amber-500 text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 hover:bg-amber-600 transition-all shadow-lg shadow-amber-900/20"
                         >
-                          <ArrowDownRight size={20} />
-                          Check Out
+                          <Timer size={20} />
+                          Start Break
                         </button>
-                      </>
-                    ) : (
-                      <div className="bg-green-500/20 text-green-400 border border-green-500/30 px-6 py-3 rounded-2xl font-bold flex items-center gap-2">
-                        <CheckCircle2 size={20} />
-                        Shift Logged
-                      </div>
-                    )}
-                  </>
-                ) : (
+                      ) : !attendance.find(r => r.date === getLocalToday())?.breakEnd ? (
+                        <button 
+                          onClick={handleEndBreak}
+                          className="bg-green-500 text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 hover:bg-green-600 transition-all shadow-lg shadow-green-900/20"
+                        >
+                          <Timer size={20} />
+                          End Break
+                        </button>
+                      ) : null}
+                      
+                      <button 
+                        onClick={handleCheckOut}
+                        className="bg-white text-zinc-900 px-6 py-3 rounded-2xl font-bold flex items-center gap-2 hover:bg-zinc-100 transition-all shadow-lg"
+                      >
+                        <ArrowDownRight size={20} />
+                        Check Out
+                      </button>
+                    </>
+                  ) : (
+                    <div className="bg-green-500/20 text-green-400 border border-green-500/30 px-6 py-3 rounded-2xl font-bold flex items-center gap-2">
+                      <CheckCircle2 size={20} />
+                      Shift Logged
+                    </div>
+                  )}
+                </>
+
+                {(user?.role !== 'employee' && user?.role !== 'hr') && (
                   <div className="flex gap-4">
                     <div className="bg-blue-600 text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 shadow-lg shadow-blue-950/20">
                       <ShieldCheck size={20} />
