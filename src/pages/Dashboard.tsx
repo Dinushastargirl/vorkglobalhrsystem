@@ -535,9 +535,6 @@ export default function Dashboard() {
                         Shift Logged
                       </div>
                     )}
-                  </>
-                )}
-
                 {(user?.role !== 'employee' && user?.role !== 'hr') && (
                   <div className="flex gap-4">
                     <div className="bg-blue-600 text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 shadow-lg shadow-blue-950/20">
