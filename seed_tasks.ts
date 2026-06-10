@@ -67,6 +67,23 @@ async function seed() {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     });
+    tasksToCreate.push({
+        title: 'Check-in',
+        description: 'Daily check-in for Dinusha at 10:00 AM',
+        assignedTo: dinusha.uid,
+        assignedBy: superUid,
+        priority: 'Medium',
+        status: 'Not Started',
+        startDate: today,
+        deadline: today,
+        estimatedHours: 1,
+        progressPercent: 0,
+        category: 'Management',
+        comments: [],
+        attachments: [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+    });
   }
 
   if (janani) {
