@@ -84,22 +84,21 @@ app.post('/api/users', async (req, res) => {
 
 app.put('/api/users/:uid', async (req, res) => {
   try {
-    // Strip fields that can't be updated freely (unique/id fields)
-    const { uid, email, username, ...rest } = req.body;
+    const b = req.body;
 
-    // Ensure JSON fields are stored correctly
-    const updateData: any = { ...rest };
-    if (updateData.leaveQuotas && typeof updateData.leaveQuotas === 'object') {
-      updateData.leaveQuotas = updateData.leaveQuotas;
-    }
-    if (updateData.usedLeaves && typeof updateData.usedLeaves === 'object') {
-      updateData.usedLeaves = updateData.usedLeaves;
-    }
-    if (updateData.skills && Array.isArray(updateData.skills)) {
-      updateData.skills = updateData.skills;
-    }
-    if (updateData.employmentHistory && typeof updateData.employmentHistory === 'object') {
-      updateData.employmentHistory = updateData.employmentHistory;
+    // Only pick fields that actually exist in the Prisma User model
+    const updateData: any = {};
+    const fields = [
+      'name','role','branch','department','phone','photoUrl','status','joinDate',
+      'salaryA','salaryB','epf','advances','cover','intensive','travelling','net',
+      'performanceScore','leaveQuotas','usedLeaves','sortOrder','bankName',
+      'bankBranch','accountNo','accountHolderName','nic','address','nickname',
+      'extraDays','employmentHistory','skills','techEquipment','password'
+    ];
+    for (const field of fields) {
+      if (b[field] !== undefined) {
+        updateData[field] = b[field];
+      }
     }
 
     const user = await prisma.user.update({
@@ -108,8 +107,8 @@ app.put('/api/users/:uid', async (req, res) => {
     });
     res.json(user);
   } catch (err: any) {
-    console.error("Error updating user:", err);
-    res.status(500).json({ error: 'Failed to update user', details: err?.message || 'Unknown error' });
+    console.error("Error updating user:", err?.message);
+    res.status(500).json({ error: 'Failed to update user', details: err?.message });
   }
 });
 
