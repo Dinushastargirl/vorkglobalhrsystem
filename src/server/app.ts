@@ -84,10 +84,27 @@ app.post('/api/users', async (req, res) => {
 
 app.put('/api/users/:uid', async (req, res) => {
   try {
-    const user = await prisma.user.upsert({
+    // Strip fields that can't be updated freely (unique/id fields)
+    const { uid, email, username, ...rest } = req.body;
+
+    // Ensure JSON fields are stored correctly
+    const updateData: any = { ...rest };
+    if (updateData.leaveQuotas && typeof updateData.leaveQuotas === 'object') {
+      updateData.leaveQuotas = updateData.leaveQuotas;
+    }
+    if (updateData.usedLeaves && typeof updateData.usedLeaves === 'object') {
+      updateData.usedLeaves = updateData.usedLeaves;
+    }
+    if (updateData.skills && Array.isArray(updateData.skills)) {
+      updateData.skills = updateData.skills;
+    }
+    if (updateData.employmentHistory && typeof updateData.employmentHistory === 'object') {
+      updateData.employmentHistory = updateData.employmentHistory;
+    }
+
+    const user = await prisma.user.update({
       where: { uid: req.params.uid },
-      update: req.body,
-      create: { ...req.body, uid: req.params.uid }
+      data: updateData,
     });
     res.json(user);
   } catch (err: any) {
