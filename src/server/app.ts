@@ -65,6 +65,7 @@ app.post("/api/auth/login", (req, res) => {
 // --- Users ---
 app.get('/api/users', async (req, res) => {
   try {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     const users = await prisma.user.findMany({ orderBy: { sortOrder: 'asc' } });
     res.json(users);
   } catch (err) {
@@ -89,8 +90,9 @@ app.put('/api/users/:uid', async (req, res) => {
       create: { ...req.body, uid: req.params.uid }
     });
     res.json(user);
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to update user' });
+  } catch (err: any) {
+    console.error("Error updating user:", err);
+    res.status(500).json({ error: 'Failed to update user', details: err?.message || 'Unknown error' });
   }
 });
 
