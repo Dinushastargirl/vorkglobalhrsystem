@@ -21,14 +21,51 @@ export async function getEmployee(uid: string): Promise<UserProfile | null> {
 }
 
 export async function saveEmployee(emp: UserProfile): Promise<void> {
-  // If it has an ID, update it, otherwise create it
-  // Wait, our API endpoints: PUT /api/users/:uid
+  // Only send fields that exist in the Prisma schema — never send uid/email/username
+  // as those are unique/immutable and will cause Prisma to reject the update
+  const payload = {
+    name: emp.name,
+    role: emp.role,
+    branch: emp.branch,
+    department: emp.department,
+    phone: emp.phone,
+    photoUrl: emp.photoUrl,
+    status: emp.status,
+    joinDate: emp.joinDate,
+    salaryA: emp.salaryA,
+    salaryB: emp.salaryB,
+    epf: emp.epf,
+    advances: emp.advances,
+    cover: emp.cover,
+    intensive: emp.intensive,
+    travelling: emp.travelling,
+    net: emp.net,
+    performanceScore: emp.performanceScore,
+    leaveQuotas: emp.leaveQuotas,
+    usedLeaves: emp.usedLeaves,
+    sortOrder: emp.sortOrder,
+    bankName: emp.bankName,
+    bankBranch: emp.bankBranch,
+    accountNo: emp.accountNo,
+    accountHolderName: emp.accountHolderName,
+    nic: emp.nic,
+    address: emp.address,
+    nickname: emp.nickname,
+    extraDays: emp.extraDays,
+    employmentHistory: emp.employmentHistory,
+    skills: emp.skills,
+    techEquipment: emp.techEquipment,
+  };
+
   const res = await fetch(`/api/users/${emp.uid}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(emp)
+    body: JSON.stringify(payload)
   });
-  if (!res.ok) throw new Error('Failed to save employee');
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    throw new Error(errData?.details || errData?.error || 'Failed to save employee');
+  }
 }
 
 export async function updateProfileStatus(uid: string, status: UserProfile['status']): Promise<void> {
