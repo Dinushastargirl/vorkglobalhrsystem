@@ -85,7 +85,7 @@ export default function Profile() {
     }
     
     try {
-      toast.loading('Saving profile changes...');
+      const toastId = toast.loading('Saving profile changes...');
       let finalPhotoUrl = formData.photoUrl || user.photoUrl || '';
 
       // 1. Upload photo if selected
@@ -112,11 +112,10 @@ export default function Profile() {
       updateUser(updatedUser);
       setIsEditing(false);
       setSelectedFile(null);
-      toast.dismiss();
-      toast.success('Profile details updated successfully!');
+      toast.success('Profile details updated successfully!', { id: toastId });
     } catch (err) {
       console.error('Profile Update Error:', err);
-      toast.dismiss();
+      toast.dismiss(); // dismiss all just in case
       toast.error('Failed to save profile changes');
     }
   };
